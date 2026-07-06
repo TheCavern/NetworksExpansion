@@ -842,61 +842,61 @@ public class ExpansionItems {
         ExpansionItemsMenus.MENU_CARGO_SYSTEM,
         ExpansionItemStacks.TRANSFER_PUSHER,
         ExpansionWorkbench.TYPE,
-        ExpansionRecipes.TRANSFER_PUSHER, 6);
+        ExpansionRecipes.TRANSFER_PUSHER, 32);
 
     public static final TransferMorePusher TRANSFER_MORE_PUSHER = new TransferMorePusher(
         ExpansionItemsMenus.MENU_CARGO_SYSTEM,
         ExpansionItemStacks.TRANSFER_MORE_PUSHER,
         ExpansionWorkbench.TYPE,
-        ExpansionRecipes.TRANSFER_MORE_PUSHER, 6);
+        ExpansionRecipes.TRANSFER_MORE_PUSHER, 32);
 
     public static final TransferBestPusher TRANSFER_BEST_PUSHER = new TransferBestPusher(
         ExpansionItemsMenus.MENU_CARGO_SYSTEM,
         ExpansionItemStacks.TRANSFER_BEST_PUSHER,
         ExpansionWorkbench.TYPE,
-        ExpansionRecipes.TRANSFER_BEST_PUSHER, 6);
+        ExpansionRecipes.TRANSFER_BEST_PUSHER, 32);
 
     public static final TransferGrabber TRANSFER_GRABBER = new TransferGrabber(
         ExpansionItemsMenus.MENU_CARGO_SYSTEM,
         ExpansionItemStacks.TRANSFER_GRABBER,
         ExpansionWorkbench.TYPE,
-        ExpansionRecipes.TRANSFER_GRABBER, 6);
+        ExpansionRecipes.TRANSFER_GRABBER, 32);
 
     public static final Transfer TRANSFER = new Transfer(
         ExpansionItemsMenus.MENU_CARGO_SYSTEM,
         ExpansionItemStacks.TRANSFER,
         ExpansionWorkbench.TYPE,
-        ExpansionRecipes.TRANSFER, 6);
+        ExpansionRecipes.TRANSFER, 32);
 
     public static final AdvancedTransferPusher ADVANCED_TRANSFER_PUSHER = new AdvancedTransferPusher(
         ExpansionItemsMenus.MENU_CARGO_SYSTEM,
         ExpansionItemStacks.ADVANCED_TRANSFER_PUSHER,
         ExpansionWorkbench.TYPE,
-        ExpansionRecipes.ADVANCED_TRANSFER_PUSHER, 6);
+        ExpansionRecipes.ADVANCED_TRANSFER_PUSHER, 32);
 
     public static final AdvancedTransferMorePusher ADVANCED_TRANSFER_MORE_PUSHER = new AdvancedTransferMorePusher(
         ExpansionItemsMenus.MENU_CARGO_SYSTEM,
         ExpansionItemStacks.ADVANCED_TRANSFER_MORE_PUSHER,
         ExpansionWorkbench.TYPE,
-        ExpansionRecipes.ADVANCED_TRANSFER_MORE_PUSHER, 6);
+        ExpansionRecipes.ADVANCED_TRANSFER_MORE_PUSHER, 32);
 
     public static final AdvancedTransferBestPusher ADVANCED_TRANSFER_BEST_PUSHER = new AdvancedTransferBestPusher(
         ExpansionItemsMenus.MENU_CARGO_SYSTEM,
         ExpansionItemStacks.ADVANCED_TRANSFER_BEST_PUSHER,
         ExpansionWorkbench.TYPE,
-        ExpansionRecipes.ADVANCED_TRANSFER_BEST_PUSHER, 6);
+        ExpansionRecipes.ADVANCED_TRANSFER_BEST_PUSHER, 32);
 
     public static final AdvancedTransferGrabber ADVANCED_TRANSFER_GRABBER = new AdvancedTransferGrabber(
         ExpansionItemsMenus.MENU_CARGO_SYSTEM,
         ExpansionItemStacks.ADVANCED_TRANSFER_GRABBER,
         ExpansionWorkbench.TYPE,
-        ExpansionRecipes.ADVANCED_TRANSFER_GRABBER, 6);
+        ExpansionRecipes.ADVANCED_TRANSFER_GRABBER, 32);
 
     public static final AdvancedTransfer ADVANCED_TRANSFER = new AdvancedTransfer(
         ExpansionItemsMenus.MENU_CARGO_SYSTEM,
         ExpansionItemStacks.ADVANCED_TRANSFER,
         ExpansionWorkbench.TYPE,
-        ExpansionRecipes.ADVANCED_TRANSFER, 6);
+        ExpansionRecipes.ADVANCED_TRANSFER, 32);
 
     public static final SmartGrabber SMART_GRABBER = new SmartGrabber(
         ExpansionItemsMenus.MENU_CARGO_SYSTEM,

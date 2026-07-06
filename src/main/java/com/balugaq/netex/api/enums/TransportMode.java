@@ -13,8 +13,10 @@ public enum TransportMode {
     FIRST_STOP,
     LAZY,
     VOID,
-    SPECIFIED_QUANTITY;
+    SPECIFIED_QUANTITY,
+    P2P;
 
+    @Deprecated
     public @NotNull String getName() {
         return TextUtil.colorRandomString(getRawName());
     }
@@ -30,6 +32,7 @@ public enum TransportMode {
             case LAZY -> Lang.getString("icons.transport_mode.lazy");
             case VOID -> Lang.getString("icons.transport_mode.void");
             case SPECIFIED_QUANTITY -> Lang.getString("icons.transport_mode.specified_quantity");
+            case P2P -> Lang.getString("icons.transport_mode.p2p");
         };
     }
 

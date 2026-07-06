@@ -7,20 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ytdd9527.networksexpansion</groupId>
     <artifactId>NetworksExpansion</artifactId>
-    <version>2.1.94</version>
-
-    <distributionManagement>
-        <repository>
-            <id>central</id>
-            <name>sefi-central</name>
-            <url>https://sefiraat.jfrog.io/artifactory/default-maven-local</url>
-        </repository>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <name>sefi-snapshot</name>
-            <url>https://sefiraat.jfrog.io/artifactory/default-maven-local</url>
-        </snapshotRepository>
-    </distributionManagement>
+    <version>2.1.105</version>
 
     <pluginRepositories>
         <pluginRepository>
@@ -335,11 +322,10 @@
         </dependency>
         <!-- Support FluffyMachines -->
         <dependency>
-            <groupId>com.github.SlimefunGuguProject</groupId>
+            <groupId>com.github.balugaq</groupId>
             <artifactId>FluffyMachines</artifactId>
-            <version>035fe56381</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/FluffyMachines.jar</systemPath>
+            <version>43d7444e4c</version>
+            <scope>provided</scope>
         </dependency>
         <!-- Drawer compatibility with inter-server -->
         <dependency>
@@ -349,11 +335,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.balugaq</groupId>
+            <groupId>com.github.balugaq</groupId>
             <artifactId>JustEnoughGuide</artifactId>
-            <version>2.1.15</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/JustEnoughGuide v2.1.15.jar</systemPath>
+            <version>7f21e113a2</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

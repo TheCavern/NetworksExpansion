@@ -21,6 +21,7 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -43,6 +44,8 @@ public enum CraftType {
     PRESSURE_CHAMBER(SupportedPressureChamberRecipes.getRecipes(), SupportedPressureChamberRecipes::testRecipe),
     QUANTUM_WORKBENCH(SupportedQuantumWorkbenchRecipes.getRecipes(), SupportedQuantumWorkbenchRecipes::testRecipe),
     SMELTERY(SupportedSmelteryRecipes.getRecipes(), SupportedSmelteryRecipes::testRecipe);
+
+    private static final Map<CraftType, Set<Map.Entry<ItemStack[], ItemStack>>> map = new HashMap<>();
 
     @Getter
     private final Set<Map.Entry<ItemStack[], ItemStack>> recipeEntries;
@@ -79,5 +82,24 @@ public enum CraftType {
 
     public static Collection<Set<Map.Entry<ItemStack[], ItemStack>>> entries() {
         return Arrays.stream(values()).map(CraftType::getRecipeEntries).toList();
+    }
+
+    public static Map<CraftType, Set<Map.Entry<ItemStack[], ItemStack>>> map() {
+        if (map.isEmpty()) {
+            map.put(ANCIENT_ALTAR, ANCIENT_ALTAR.recipeEntries);
+            map.put(ARMOR_FORGE, ARMOR_FORGE.recipeEntries);
+            map.put(COMPRESSOR, COMPRESSOR.recipeEntries);
+            map.put(CRAFTING, CRAFTING.recipeEntries);
+            map.put(EXPANSION_WORKBENCH, EXPANSION_WORKBENCH.recipeEntries);
+            map.put(GRIND_STONE, GRIND_STONE.recipeEntries);
+            map.put(JUICER, JUICER.recipeEntries);
+            map.put(MAGIC_WORKBENCH, MAGIC_WORKBENCH.recipeEntries);
+            map.put(ORE_CRUSHER, ORE_CRUSHER.recipeEntries);
+            map.put(PRESSURE_CHAMBER, PRESSURE_CHAMBER.recipeEntries);
+            map.put(QUANTUM_WORKBENCH, QUANTUM_WORKBENCH.recipeEntries);
+            map.put(SMELTERY, SMELTERY.recipeEntries);
+        }
+
+        return map;
     }
 }

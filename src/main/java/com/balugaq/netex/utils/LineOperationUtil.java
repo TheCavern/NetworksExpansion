@@ -22,7 +22,9 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @SuppressWarnings("DuplicatedCode")
@@ -228,7 +230,7 @@ public class LineOperationUtil {
                     }
                 }
             }
-            case NULL_ONLY -> {
+            case NULL_ONLY, P2P -> {
                 /*
                  * Nothing to do.
                  */
@@ -321,8 +323,8 @@ public class LineOperationUtil {
                 }
             }
             case SPECIFIED_QUANTITY -> {
-                java.util.Map<Integer, ItemStack> itemSamples = new java.util.LinkedHashMap<>();
-                java.util.Map<Integer, Integer> itemTotals = new java.util.LinkedHashMap<>();
+                Map<Integer, ItemStack> itemSamples = new LinkedHashMap<>();
+                Map<Integer, Integer> itemTotals = new LinkedHashMap<>();
                 int typeIndex = 0;
                 for (int slot : slots) {
                     final ItemStack item = blockMenu.getItemInSlot(slot);
@@ -392,11 +394,15 @@ public class LineOperationUtil {
         @NotNull Location accessor,
         @NotNull NetworkRoot root,
         @NotNull BlockMenu blockMenu,
-        @NotNull List<ItemStack> clones,
+        @NotNull List<ItemStack> templates,
         @NotNull TransportMode transportMode,
         int limitQuantity) {
-        for (ItemStack clone : clones) {
-            pushItem(accessor, root, blockMenu, clone, transportMode, limitQuantity);
+        for (int i = 0; i < templates.size(); i++) {
+            ItemStack template = templates.get(i);
+            if (template == null || template.getType() == Material.AIR) {
+                continue;
+            }
+            pushItem(accessor, root, blockMenu, template, i, transportMode, limitQuantity);
         }
     }
 
@@ -405,31 +411,33 @@ public class LineOperationUtil {
         @NotNull NetworkRoot root,
         @NotNull BlockMenu blockMenu,
         @NotNull ItemStack clone,
+        int itemIndex,
         @NotNull TransportMode transportMode,
         int limitQuantity) {
-        pushItem(UNKNOWN_LOCATION, root, blockMenu, clone, transportMode, limitQuantity);
+        pushItem(UNKNOWN_LOCATION, root, blockMenu, clone, itemIndex, transportMode, limitQuantity);
     }
 
     public static void pushItem(
         @NotNull Location accessor,
         @NotNull NetworkRoot root,
         @NotNull BlockMenu blockMenu,
-        @NotNull ItemStack clone,
+        @NotNull ItemStack template,
+        int itemIndex,
         @NotNull TransportMode transportMode,
         int limitQuantity) {
-        final ItemRequest itemRequest = new ItemRequest(clone, clone.getMaxStackSize());
+        final ItemRequest itemRequest = new ItemRequest(template, template.getMaxStackSize());
 
         final int[] slots =
-            blockMenu.getPreset().getSlotsAccessedByItemTransport(blockMenu, ItemTransportFlow.INSERT, clone);
+            blockMenu.getPreset().getSlotsAccessedByItemTransport(blockMenu, ItemTransportFlow.INSERT, template);
         switch (transportMode) {
             case NONE -> {
                 int freeSpace = 0;
                 for (int slot : slots) {
                     final ItemStack itemStack = blockMenu.getItemInSlot(slot);
                     if (itemStack == null || itemStack.getType() == Material.AIR) {
-                        freeSpace += clone.getMaxStackSize();
+                        freeSpace += template.getMaxStackSize();
                     } else {
-                        if (itemStack.getAmount() >= clone.getMaxStackSize()) {
+                        if (itemStack.getAmount() >= template.getMaxStackSize()) {
                             continue;
                         }
                         if (StackUtils.itemsMatch(itemRequest, itemStack)) {
@@ -456,7 +464,7 @@ public class LineOperationUtil {
                 for (int slot : slots) {
                     final ItemStack itemStack = blockMenu.getItemInSlot(slot);
                     if (itemStack == null || itemStack.getType() == Material.AIR) {
-                        itemRequest.setAmount(clone.getMaxStackSize());
+                        itemRequest.setAmount(template.getMaxStackSize());
                     } else {
                         continue;
                     }
@@ -480,7 +488,7 @@ public class LineOperationUtil {
                     if (itemStack == null || itemStack.getType() == Material.AIR) {
                         continue;
                     }
-                    if (itemStack.getAmount() >= clone.getMaxStackSize()) {
+                    if (itemStack.getAmount() >= template.getMaxStackSize()) {
                         continue;
                     }
                     if (StackUtils.itemsMatch(itemRequest, itemStack)) {
@@ -510,72 +518,24 @@ public class LineOperationUtil {
                     break;
                 }
                 final int slot = slots[0];
-                final ItemStack itemStack = blockMenu.getItemInSlot(slot);
-                if (itemStack == null || itemStack.getType() == Material.AIR) {
-                    itemRequest.setAmount(clone.getMaxStackSize());
-                } else {
-                    if (itemStack.getAmount() >= clone.getMaxStackSize()) {
-                        return;
-                    }
-                    if (StackUtils.itemsMatch(itemRequest, itemStack)) {
-                        final int space = itemStack.getMaxStackSize() - itemStack.getAmount();
-                        if (space > 0) {
-                            itemRequest.setAmount(space);
-                        } else {
-                            return;
-                        }
-                    } else {
-                        return;
-                    }
-                }
-                itemRequest.setAmount(Math.min(itemRequest.getAmount(), limitQuantity));
-
-                final ItemStack retrieved = root.getItemStack0(accessor, itemRequest);
-                if (retrieved != null && retrieved.getType() != Material.AIR) {
-                    retrieved.getAmount();
-                    BlockMenuUtil.pushItem(blockMenu, retrieved, slot);
-                }
+                pushSlot(accessor, root, itemRequest, blockMenu, template, slot, limitQuantity);
             }
             case LAST_ONLY -> {
                 if (slots.length == 0) {
                     break;
                 }
                 final int slot = slots[slots.length - 1];
-                final ItemStack itemStack = blockMenu.getItemInSlot(slot);
-                if (itemStack == null || itemStack.getType() == Material.AIR) {
-                    itemRequest.setAmount(clone.getMaxStackSize());
-                } else {
-                    if (itemStack.getAmount() >= clone.getMaxStackSize()) {
-                        return;
-                    }
-                    if (StackUtils.itemsMatch(itemRequest, itemStack)) {
-                        final int space = itemStack.getMaxStackSize() - itemStack.getAmount();
-                        if (space > 0) {
-                            itemRequest.setAmount(space);
-                        } else {
-                            return;
-                        }
-                    } else {
-                        return;
-                    }
-                }
-                itemRequest.setAmount(Math.min(itemRequest.getAmount(), limitQuantity));
-
-                final ItemStack retrieved = root.getItemStack0(accessor, itemRequest);
-                if (retrieved != null && retrieved.getType() != Material.AIR) {
-                    retrieved.getAmount();
-                    BlockMenuUtil.pushItem(blockMenu, retrieved, slot);
-                }
+                pushSlot(accessor, root, itemRequest, blockMenu, template, slot, limitQuantity);
             }
             case FIRST_STOP -> {
                 int freeSpace = 0;
                 for (int slot : slots) {
                     final ItemStack itemStack = blockMenu.getItemInSlot(slot);
                     if (itemStack == null || itemStack.getType() == Material.AIR) {
-                        freeSpace += clone.getMaxStackSize();
+                        freeSpace += template.getMaxStackSize();
                         break;
                     } else {
-                        if (itemStack.getAmount() >= clone.getMaxStackSize()) {
+                        if (itemStack.getAmount() >= template.getMaxStackSize()) {
                             continue;
                         }
                         if (StackUtils.itemsMatch(itemRequest, itemStack)) {
@@ -605,9 +565,9 @@ public class LineOperationUtil {
                         for (int slot : slots) {
                             final ItemStack itemStack = blockMenu.getItemInSlot(slot);
                             if (itemStack == null || itemStack.getType() == Material.AIR) {
-                                freeSpace += clone.getMaxStackSize();
+                                freeSpace += template.getMaxStackSize();
                             } else {
-                                if (itemStack.getAmount() >= clone.getMaxStackSize()) {
+                                if (itemStack.getAmount() >= template.getMaxStackSize()) {
                                     continue;
                                 }
                                 if (StackUtils.itemsMatch(itemRequest, itemStack)) {
@@ -654,7 +614,7 @@ public class LineOperationUtil {
                     for (int slot : slots) {
                         final ItemStack itemStack = blockMenu.getItemInSlot(slot);
                         if (itemStack == null || itemStack.getType() == Material.AIR) {
-                            availableSpace += clone.getMaxStackSize();
+                            availableSpace += template.getMaxStackSize();
                         } else if (StackUtils.itemsMatch(itemRequest, itemStack)) {
                             availableSpace += Math.max(0, itemStack.getMaxStackSize() - itemStack.getAmount());
                         }
@@ -670,6 +630,49 @@ public class LineOperationUtil {
                     }
                 }
             }
+            case P2P -> {
+                if (itemIndex >= slots.length) {
+                    return;
+                }
+
+                int slot = slots[itemIndex];
+                pushSlot(accessor, root, itemRequest, blockMenu, template, slot, limitQuantity);
+            }
+        }
+    }
+
+    public static void pushSlot(
+        @NotNull Location accessor,
+        @NotNull NetworkRoot root,
+        @NotNull ItemRequest itemRequest,
+        @NotNull BlockMenu blockMenu,
+        @NotNull ItemStack template,
+        int slot,
+        int limitQuantity
+    ) {
+        final ItemStack itemStack = blockMenu.getItemInSlot(slot);
+        if (itemStack == null || itemStack.getType() == Material.AIR) {
+            itemRequest.setAmount(template.getMaxStackSize());
+        } else {
+            if (itemStack.getAmount() >= template.getMaxStackSize()) {
+                return;
+            }
+            if (StackUtils.itemsMatch(itemRequest, itemStack)) {
+                final int space = itemStack.getMaxStackSize() - itemStack.getAmount();
+                if (space > 0) {
+                    itemRequest.setAmount(space);
+                } else {
+                    return;
+                }
+            } else {
+                return;
+            }
+        }
+        itemRequest.setAmount(Math.min(itemRequest.getAmount(), limitQuantity));
+
+        final ItemStack retrieved = root.getItemStack0(accessor, itemRequest);
+        if (retrieved != null && retrieved.getType() != Material.AIR) {
+            BlockMenuUtil.pushItem(blockMenu, retrieved, slot);
         }
     }
 

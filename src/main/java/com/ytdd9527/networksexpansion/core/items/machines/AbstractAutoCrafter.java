@@ -97,7 +97,6 @@ public abstract class AbstractAutoCrafter extends NetworkObject implements SoftC
         final NodeDefinition definition = NetworkStorage.getNode(blockMenu.getLocation());
 
         if (definition == null || definition.getNode() == null) {
-            sendDebugMessage(blockMenu.getLocation(), "No network found");
             sendFeedback(blockMenu.getLocation(), FeedbackType.NO_NETWORK_FOUND);
             return;
         }
@@ -118,69 +117,58 @@ public abstract class AbstractAutoCrafter extends NetworkObject implements SoftC
         final ItemStack blueprint = blockMenu.getItemInSlot(BLUEPRINT_SLOT);
 
         if (blueprint == null || blueprint.getType() == Material.AIR) {
-            sendDebugMessage(blockMenu.getLocation(), "No blueprint found");
             sendFeedback(blockMenu.getLocation(), FeedbackType.NO_BLUEPRINT_FOUND);
             return;
         }
 
         final long networkCharge = root.getRootPower();
 
-        if (networkCharge > this.chargePerCraft) {
-            final SlimefunItem item = SlimefunItem.getByItem(blueprint);
-
-            if (!isValidBlueprint(item)) {
-                sendDebugMessage(blockMenu.getLocation(), "Invalid blueprint");
-                sendFeedback(blockMenu.getLocation(), FeedbackType.INVALID_BLUEPRINT);
-                return;
-            }
-
-            BlueprintInstance instance = AbstractAutoCrafter.INSTANCE_MAP.get(blockMenu.getLocation());
-
-            if (instance == null) {
-                final ItemMeta blueprintMeta = blueprint.getItemMeta();
-                Optional<BlueprintInstance> optional;
-                optional = DataTypeMethods.getOptionalCustom(
-                    blueprintMeta, Keys.BLUEPRINT_INSTANCE, PersistentCraftingBlueprintType.TYPE);
-
-                if (optional.isEmpty()) {
-                    optional = DataTypeMethods.getOptionalCustom(
-                        blueprintMeta, Keys.BLUEPRINT_INSTANCE2, PersistentCraftingBlueprintType.TYPE);
-                }
-
-                if (optional.isEmpty()) {
-                    optional = DataTypeMethods.getOptionalCustom(
-                        blueprintMeta, Keys.BLUEPRINT_INSTANCE3, PersistentCraftingBlueprintType.TYPE);
-                }
-
-                if (optional.isEmpty()) {
-                    sendDebugMessage(blockMenu.getLocation(), "No blueprint instance found");
-                    sendFeedback(blockMenu.getLocation(), FeedbackType.NO_BLUEPRINT_INSTANCE_FOUND);
-                    return;
-                }
-
-                instance = optional.get();
-                setCache(blockMenu, instance);
-            }
-
-            final ItemStack output = blockMenu.getItemInSlot(OUTPUT_SLOT);
-            int blueprintAmount = canBlueprintStack() ? blueprint.getAmount() : 1;
-
-            ItemStack targetOutput = instance.getItemStack();
-            if (output != null
-                && output.getType() != Material.AIR
-                && targetOutput != null
-                && (output.getAmount() + targetOutput.getAmount() * blueprintAmount > output.getMaxStackSize()
-                || !StackUtils.itemsMatch(targetOutput, output))) {
-                sendDebugMessage(blockMenu.getLocation(), "Output slot is full");
-                sendFeedback(blockMenu.getLocation(), FeedbackType.OUTPUT_FULL);
-                return;
-            }
-
-            if (tryCraft(blockMenu, instance, root, blueprintAmount, output)) {
-                root.removeRootPower(this.chargePerCraft);
-            }
-        } else {
+        if (networkCharge < this.chargePerCraft) {
             sendFeedback(blockMenu.getLocation(), FeedbackType.NOT_ENOUGH_POWER);
+            return;
+        }
+
+        final SlimefunItem item = SlimefunItem.getByItem(blueprint);
+
+        if (!isValidBlueprint(item)) {
+            sendFeedback(blockMenu.getLocation(), FeedbackType.INVALID_BLUEPRINT);
+            return;
+        }
+
+        BlueprintInstance instance = AbstractAutoCrafter.INSTANCE_MAP.get(blockMenu.getLocation());
+
+        if (instance == null) {
+            final ItemMeta blueprintMeta = blueprint.getItemMeta();
+            BlueprintInstance instance2 = Keys.getBlueprintInstance(blueprintMeta);
+            if (instance2 == null) {
+                sendFeedback(blockMenu.getLocation(), FeedbackType.NO_BLUEPRINT_INSTANCE_FOUND);
+                return;
+            }
+
+            if (instance2 == BlueprintInstance.INVALID) {
+                sendFeedback(blockMenu.getLocation(), FeedbackType.BROKEN_BLUEPRINT);
+                return;
+            }
+
+            setCache(blockMenu, instance2);
+            instance = instance2;
+        }
+
+        final ItemStack output = blockMenu.getItemInSlot(OUTPUT_SLOT);
+        int blueprintAmount = canBlueprintStack() ? blueprint.getAmount() : 1;
+
+        ItemStack targetOutput = instance.getItemStack();
+        if (output != null
+            && output.getType() != Material.AIR
+            && targetOutput != null
+            && (output.getAmount() + targetOutput.getAmount() * blueprintAmount > output.getMaxStackSize()
+            || !StackUtils.itemsMatch(targetOutput, output))) {
+            sendFeedback(blockMenu.getLocation(), FeedbackType.OUTPUT_FULL);
+            return;
+        }
+
+        if (tryCraft(blockMenu, instance, root, blueprintAmount, output)) {
+            root.removeRootPower(this.chargePerCraft);
         }
     }
 
@@ -196,7 +184,7 @@ public abstract class AbstractAutoCrafter extends NetworkObject implements SoftC
          * only need the one
          */
         HashMap<ItemStack, Integer> requiredItems = new HashMap<>();
-        for (int i = 0; i < 9; i++) {
+        for (int i = 0; i < instance.getRecipeItems().length; i++) {
             final ItemStack requested = instance.getRecipeItems()[i];
             if (requested != null) {
                 requiredItems.merge(requested, requested.getAmount() * blueprintAmount, Integer::sum);
@@ -205,15 +193,15 @@ public abstract class AbstractAutoCrafter extends NetworkObject implements SoftC
 
         for (Map.Entry<ItemStack, Integer> entry : requiredItems.entrySet()) {
             if (!root.contains(new ItemRequest(entry.getKey(), entry.getValue()))) {
-                sendDebugMessage(blockMenu.getLocation(), "Not enough items in network");
                 sendFeedback(blockMenu.getLocation(), FeedbackType.NOT_ENOUGH_ITEMS_IN_NETWORK);
                 return false;
             }
         }
 
-        ItemStack[] fetcheds = new ItemStack[9];
+        ItemStack[] fetcheds = new ItemStack[instance.getRecipeItems().length];
+
         // Then fetch the actual items
-        for (int i = 0; i < 9; i++) {
+        for (int i = 0; i < instance.getRecipeItems().length; i++) {
             final ItemStack requested = instance.getRecipeItems()[i];
             if (requested != null) {
                 final ItemStack fetched = root.getItemStack0(
@@ -238,12 +226,11 @@ public abstract class AbstractAutoCrafter extends NetworkObject implements SoftC
 
         if (crafted.getAmount() > crafted.getMaxStackSize()) {
             returnItems(root, fetcheds, blockMenu);
-            sendDebugMessage(blockMenu.getLocation(), "Result is too large");
             sendFeedback(blockMenu.getLocation(), FeedbackType.RESULT_IS_TOO_LARGE);
             return false;
         }
 
-        if (existing != null && existing.getType() != Material.AIR) {
+        if (!withholding && existing != null && existing.getType() != Material.AIR) {
             root.addItemStack0(blockMenu.getLocation(), crafted);
         }
         if (crafted != null && crafted.getType() != Material.AIR) {

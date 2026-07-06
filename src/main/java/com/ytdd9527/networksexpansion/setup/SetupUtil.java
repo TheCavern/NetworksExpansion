@@ -289,15 +289,11 @@ public class SetupUtil {
             ExpansionItemsMenus.MAIN_MENU_FUNCTIONAL_MACHINE,
             ExpansionItemsMenus.SUB_MENU_CORE_MACHINE,
             ExpansionItemsMenus.SUB_MENU_ADVANCED_NETWORKS,
-            ExpansionItemsMenus.SUB_MENU_BRIDGE,
-            ExpansionItemsMenus.SUB_MENU_ENCODER,
-            ExpansionItemsMenus.SUB_MENU_CRAFTER_MACHINE);
+            ExpansionItemsMenus.SUB_MENU_BRIDGE);
         ExpansionItemsMenus.MAIN_MENU_FUNCTIONAL_MACHINE.addFrom(
             ExpansionItemsMenus.SUB_MENU_CORE_MACHINE,
             ExpansionItemsMenus.SUB_MENU_ADVANCED_NETWORKS,
-            ExpansionItemsMenus.SUB_MENU_BRIDGE,
-            ExpansionItemsMenus.SUB_MENU_ENCODER,
-            ExpansionItemsMenus.SUB_MENU_CRAFTER_MACHINE);
+            ExpansionItemsMenus.SUB_MENU_BRIDGE);
 
         ExpansionItemsMenus.MAIN_ITEM_GROUP.addTo(
             ExpansionItemsMenus.MAIN_MENU_TROPHY,

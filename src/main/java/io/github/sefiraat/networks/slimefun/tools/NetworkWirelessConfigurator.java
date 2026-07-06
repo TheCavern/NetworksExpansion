@@ -54,14 +54,7 @@ public class NetworkWirelessConfigurator extends SpecialSlimefunItem {
                         setReceiver(heldItem, blockMenu, player);
                     } else if (slimefunItem instanceof AdvancedWirelessTransmitter w) {
                         final ItemMeta itemMeta = heldItem.getItemMeta();
-                        Location location = PersistentDataAPI.get(itemMeta, Keys.TARGET_LOCATION, DataType.LOCATION);
-                        if (location == null) {
-                            location = PersistentDataAPI.get(itemMeta, Keys.TARGET_LOCATION2, DataType.LOCATION);
-                        }
-
-                        if (location == null) {
-                            location = PersistentDataAPI.get(itemMeta, Keys.TARGET_LOCATION3, DataType.LOCATION);
-                        }
+                        Location location = Keys.getTargetLocation(itemMeta);
 
                         if (location == null) {
                             player.sendMessage(
@@ -89,14 +82,7 @@ public class NetworkWirelessConfigurator extends SpecialSlimefunItem {
         @NotNull BlockMenu blockMenu,
         @NotNull Player player) {
         final ItemMeta itemMeta = itemStack.getItemMeta();
-        Location location = PersistentDataAPI.get(itemMeta, Keys.TARGET_LOCATION, DataType.LOCATION);
-        if (location == null) {
-            location = PersistentDataAPI.get(itemMeta, Keys.TARGET_LOCATION2, DataType.LOCATION);
-        }
-
-        if (location == null) {
-            location = PersistentDataAPI.get(itemMeta, Keys.TARGET_LOCATION3, DataType.LOCATION);
-        }
+        Location location = Keys.getTargetLocation(itemMeta);
 
         if (location == null) {
             player.sendMessage(

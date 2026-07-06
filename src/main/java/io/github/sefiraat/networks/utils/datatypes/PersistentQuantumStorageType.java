@@ -62,55 +62,9 @@ public class PersistentQuantumStorageType implements PersistentDataType<Persiste
             item = primitive.get(Keys.ITEM3, DataType.ITEM_STACK);
         }
 
-        Long amount;
-        try {
-            amount = primitive.get(Keys.AMOUNT, DataType.LONG);
-            if (amount == null) {
-                amount = primitive.get(Keys.AMOUNT2, DataType.LONG);
-            }
-            if (amount == null) {
-                amount = primitive.getOrDefault(Keys.AMOUNT3, DataType.LONG, 0L);
-            }
-        } catch (Throwable ignored) {
-            Integer amountI;
-            amountI = primitive.get(Keys.AMOUNT, DataType.INTEGER);
-            if (amountI == null) {
-                amountI = primitive.get(Keys.AMOUNT2, DataType.INTEGER);
-            }
-            if (amountI == null) {
-                amountI = primitive.getOrDefault(Keys.AMOUNT3, DataType.INTEGER, 0);
-            }
-            amount = amountI.longValue();
-        }
-
-        Long limit;
-        try {
-            limit = primitive.get(Keys.MAX_AMOUNT, DataType.LONG);
-            if (limit == null) {
-                limit = primitive.get(Keys.MAX_AMOUNT2, DataType.LONG);
-            }
-            if (limit == null) {
-                limit = primitive.getOrDefault(Keys.MAX_AMOUNT3, DataType.LONG, 64L);
-            }
-        } catch (Throwable ignored) {
-            Integer limitI;
-            limitI = primitive.get(Keys.MAX_AMOUNT, DataType.INTEGER);
-            if (limitI == null) {
-                limitI = primitive.get(Keys.MAX_AMOUNT2, DataType.INTEGER);
-            }
-            if (limitI == null) {
-                limitI = primitive.getOrDefault(Keys.MAX_AMOUNT3, DataType.INTEGER, 64);
-            }
-            limit = limitI.longValue();
-        }
-
-        Boolean voidExcess = primitive.get(Keys.VOID, DataType.BOOLEAN);
-        if (voidExcess == null) {
-            voidExcess = primitive.get(Keys.VOID2, DataType.BOOLEAN);
-        }
-        if (voidExcess == null) {
-            voidExcess = primitive.getOrDefault(Keys.VOID3, DataType.BOOLEAN, false);
-        }
+        long amount = Keys.getAmountLong(primitive);
+        long limit = Keys.getMaxAmount(primitive);
+        boolean voidExcess = Keys.getVoidExcess(primitive);
 
         boolean supportsCustomMaxAmount =
             primitive.getOrDefault(Keys.SUPPORTS_CUSTOM_MAX_AMOUNT, DataType.BOOLEAN, false);

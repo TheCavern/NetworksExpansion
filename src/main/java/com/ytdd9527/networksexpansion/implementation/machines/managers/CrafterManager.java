@@ -311,24 +311,8 @@ public class CrafterManager extends NetworkObject {
             if (sf instanceof AbstractAutoCrafter) {
                 tryInsertBlueprint(crafterMenu, blueprint, 1);
             } else if (sf instanceof AbstractAdvancedAutoCrafter) {
-                BlueprintInstance instance2;
-
                 final ItemMeta blueprintMeta = blueprint.getItemMeta();
-                Optional<BlueprintInstance> optional;
-                optional = DataTypeMethods.getOptionalCustom(
-                    blueprintMeta, Keys.BLUEPRINT_INSTANCE, PersistentCraftingBlueprintType.TYPE);
-
-                if (optional.isEmpty()) {
-                    optional = DataTypeMethods.getOptionalCustom(
-                        blueprintMeta, Keys.BLUEPRINT_INSTANCE2, PersistentCraftingBlueprintType.TYPE);
-                }
-
-                if (optional.isEmpty()) {
-                    optional = DataTypeMethods.getOptionalCustom(
-                        blueprintMeta, Keys.BLUEPRINT_INSTANCE3, PersistentCraftingBlueprintType.TYPE);
-                }
-
-                instance2 = optional.orElse(null);
+                BlueprintInstance instance2 = Keys.getBlueprintInstance(blueprintMeta);
 
                 if (instance2 != null) {
                     ItemStack output = instance.getItemStack();
@@ -586,21 +570,7 @@ public class CrafterManager extends NetworkObject {
                     }
 
                     final ItemMeta blueprintMeta = blueprint.getItemMeta();
-                    Optional<BlueprintInstance> optional;
-                    optional = DataTypeMethods.getOptionalCustom(
-                        blueprintMeta, Keys.BLUEPRINT_INSTANCE, PersistentCraftingBlueprintType.TYPE);
-
-                    if (optional.isEmpty()) {
-                        optional = DataTypeMethods.getOptionalCustom(
-                            blueprintMeta, Keys.BLUEPRINT_INSTANCE2, PersistentCraftingBlueprintType.TYPE);
-                    }
-
-                    if (optional.isEmpty()) {
-                        optional = DataTypeMethods.getOptionalCustom(
-                            blueprintMeta, Keys.BLUEPRINT_INSTANCE3, PersistentCraftingBlueprintType.TYPE);
-                    }
-
-                    BlueprintInstance instance = optional.orElse(null);
+                    BlueprintInstance instance = Keys.getBlueprintInstance(blueprintMeta);
                     if (instance == null) {
                         return true;
                     }
@@ -773,21 +743,7 @@ public class CrafterManager extends NetworkObject {
 
             if (instance == null) {
                 final ItemMeta blueprintMeta = blueprint.getItemMeta();
-                Optional<BlueprintInstance> optional;
-                optional = DataTypeMethods.getOptionalCustom(
-                    blueprintMeta, Keys.BLUEPRINT_INSTANCE, PersistentCraftingBlueprintType.TYPE);
-
-                if (optional.isEmpty()) {
-                    optional = DataTypeMethods.getOptionalCustom(
-                        blueprintMeta, Keys.BLUEPRINT_INSTANCE2, PersistentCraftingBlueprintType.TYPE);
-                }
-
-                if (optional.isEmpty()) {
-                    optional = DataTypeMethods.getOptionalCustom(
-                        blueprintMeta, Keys.BLUEPRINT_INSTANCE3, PersistentCraftingBlueprintType.TYPE);
-                }
-
-                instance = optional.orElse(null);
+                instance = Keys.getBlueprintInstance(blueprintMeta);
             }
 
             if (instance != null) {

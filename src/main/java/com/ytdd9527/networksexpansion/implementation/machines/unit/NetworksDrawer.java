@@ -554,18 +554,7 @@ public class NetworksDrawer extends SpecialSlimefunItem implements DistinctiveIt
                 final ItemStack sample = each.getSampleDirectly();
                 if (StackUtils.itemsMatch(sample, toTransfer)) {
                     final ItemMeta meta = itemStack.getItemMeta();
-                    QuantumCache quantumCache = DataTypeMethods.getCustom(
-                        meta, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE);
-
-                    if (quantumCache == null) {
-                        quantumCache = DataTypeMethods.getCustom(
-                            meta, Keys.QUANTUM_STORAGE_INSTANCE2, PersistentQuantumStorageType.TYPE);
-                    }
-
-                    if (quantumCache == null) {
-                        quantumCache = DataTypeMethods.getCustom(
-                            meta, Keys.QUANTUM_STORAGE_INSTANCE3, PersistentQuantumStorageType.TYPE);
-                    }
+                    QuantumCache quantumCache = Keys.getQuantumCache(meta);
 
                     switch (mode) {
                         case FROM_QUANTUM -> {

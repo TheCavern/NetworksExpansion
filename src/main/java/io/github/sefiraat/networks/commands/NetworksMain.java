@@ -861,18 +861,7 @@ public class NetworksMain implements TabExecutor {
             player.sendMessage(Lang.getString("messages.commands.cannot-update-cargo-storage-unit"));
         } else if (slimefunItem instanceof NetworkQuantumStorage) {
             final ItemMeta meta = itemInHand.getItemMeta();
-            QuantumCache quantumCache =
-                DataTypeMethods.getCustom(meta, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE);
-
-            if (quantumCache == null) {
-                quantumCache = DataTypeMethods.getCustom(
-                    meta, Keys.QUANTUM_STORAGE_INSTANCE2, PersistentQuantumStorageType.TYPE);
-            }
-
-            if (quantumCache == null) {
-                quantumCache = DataTypeMethods.getCustom(
-                    meta, Keys.QUANTUM_STORAGE_INSTANCE3, PersistentQuantumStorageType.TYPE);
-            }
+            QuantumCache quantumCache = Keys.getQuantumCache(meta);
 
             if (quantumCache == null || quantumCache.getItemStack() == null) {
                 SlimefunItem sf = SlimefunItem.getById(currentId);
@@ -1532,9 +1521,7 @@ public class NetworksMain implements TabExecutor {
         }
 
         ItemMeta meta = itemStack.getItemMeta();
-        final QuantumCache quantumCache =
-            DataTypeMethods.getCustom(meta, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE);
-
+        final QuantumCache quantumCache = Keys.getQuantumCache(meta);
         if (quantumCache == null || quantumCache.getItemStack() == null) {
             player.sendMessage(Lang.getString("messages.commands.no-set-item"));
             return;
@@ -1564,17 +1551,12 @@ public class NetworksMain implements TabExecutor {
 
         ItemMeta blueprintMeta = blueprint.getItemMeta();
 
-        final Optional<BlueprintInstance> optional = DataTypeMethods.getOptionalCustom(
-            blueprintMeta,
-            new NamespacedKey(before, Keys.BLUEPRINT_INSTANCE.getKey()),
-            PersistentCraftingBlueprintType.TYPE);
+        BlueprintInstance instance = Keys.getBlueprintInstance(blueprintMeta);
 
-        if (optional.isEmpty()) {
+        if (instance == null) {
             player.sendMessage(Lang.getString("messages.commands.invalid-blueprint"));
             return;
         }
-
-        BlueprintInstance instance = optional.get();
 
         ItemStack fix = NetworksSlimefunItemStacks.CRAFTING_BLUEPRINT.clone();
         ItemStack item2 = instance.getItemStack();

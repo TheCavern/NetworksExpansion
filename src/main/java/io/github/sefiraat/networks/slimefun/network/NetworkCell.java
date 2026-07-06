@@ -62,7 +62,8 @@ public class NetworkCell extends NetworkObject {
 
             @Override
             public int[] getSlotsAccessedByItemTransport(ItemTransportFlow flow) {
-                return SLOTS.stream().mapToInt(Integer::intValue).toArray();
+                // fix item dupe https://b23.tv/BV1ZMXuBpEAz
+                return new int[0];
             }
         };
     }

@@ -48,13 +48,13 @@ public abstract class AbstractBlueprint extends UnusableSlimefunItem implements 
                 lore.add(Theme.PASSIVE + "- " + Lang.getString("messages.blueprint.empty"));
                 continue;
             }
-            lore.add(Theme.PASSIVE + "- " + TextUtil.stripColor(ItemStackHelper.getDisplayName(item)));
+            lore.add(Theme.PASSIVE + "- " + ItemStackHelper.getDisplayName(item));
         }
 
         lore.add("");
         lore.add(Lang.getString("messages.blueprint.output"));
 
-        lore.add(Theme.PASSIVE + "- " + TextUtil.stripColor(ItemStackHelper.getDisplayName(output)));
+        lore.add(Theme.PASSIVE + "- " + ItemStackHelper.getDisplayName(output));
 
         itemMeta.setLore(lore);
 

@@ -2,6 +2,7 @@ package io.github.sefiraat.networks.network.stackcaches;
 
 import lombok.Getter;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
@@ -9,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class BlueprintInstance extends ItemStackCache {
+    public static final BlueprintInstance INVALID = new BlueprintInstance(new ItemStack[0], new ItemStack(Material.AIR));
 
     @Getter
     private final ItemStack[] recipeItems;
@@ -16,7 +18,7 @@ public class BlueprintInstance extends ItemStackCache {
     @Nullable
     private Recipe recipe = null;
 
-    public BlueprintInstance(@NotNull ItemStack[] recipeItems, @NotNull ItemStack expectedOutput) {
+    public BlueprintInstance(@Nullable ItemStack[] recipeItems, @NotNull ItemStack expectedOutput) {
         super(expectedOutput);
         this.recipeItems = recipeItems;
     }

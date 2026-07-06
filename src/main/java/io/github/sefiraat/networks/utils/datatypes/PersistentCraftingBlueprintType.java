@@ -12,7 +12,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataAdapterContext;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
@@ -22,109 +23,119 @@ import java.util.List;
  *
  * @author Sfiguz7
  * @author Walshy
+ * @author balugaq
  */
+@NullMarked
 public class PersistentCraftingBlueprintType implements PersistentDataType<PersistentDataContainer, BlueprintInstance> {
 
     public static final PersistentDataType<PersistentDataContainer, BlueprintInstance> TYPE =
         new PersistentCraftingBlueprintType();
 
     @Override
-    @NotNull
     public Class<PersistentDataContainer> getPrimitiveType() {
         return PersistentDataContainer.class;
     }
 
     @Override
-    @NotNull
     public Class<BlueprintInstance> getComplexType() {
         return BlueprintInstance.class;
     }
 
+    public static void setItemStack(PersistentDataContainer container, String key, ItemStack itemStack) {
+        setItemStack(container, Keys.newKey(key), itemStack);
+    }
+    
+    public static void setItemStack(PersistentDataContainer container, NamespacedKey key, ItemStack itemStack) {
+        if (itemStack == null || itemStack.getType() == Material.AIR) {
+            return;
+        }
+
+        if (itemStack.isSimilar(new ItemStack(itemStack.getType()))) {
+            // pure vanilla item
+            container.set(key, DataType.STRING, "mc;" + itemStack.getType().name() + ";" + itemStack.getAmount());
+            return;
+        } else {
+            SlimefunItem sf = SlimefunItem.getByItem(itemStack);
+            if (sf != null) {
+                if (itemStack.isSimilar(sf.getItem())) {
+                    // pure slimefun item
+                    container.set(key, DataType.STRING, "sf;" + sf.getId() + ";" + itemStack.getAmount());
+                    return;
+                }
+            }
+
+            // complex item
+            container.set(key, DataType.ITEM_STACK, itemStack);
+        }
+    }
+
+    @Nullable
+    public static ItemStack getItemStack(PersistentDataContainer primitive, NamespacedKey key) {
+        try {
+            var s = primitive.get(key, DataType.STRING);
+            var s2 = s.split(";");
+            if (s2[0].equals("mc")) {
+                return new ItemStack(Material.valueOf(s2[1]), Integer.parseInt(s2[2]));
+            } else if (s2[0].equals("sf")) {
+                SlimefunItem sf = SlimefunItem.getById(s2[1]);
+                if (sf == null) sf = ExpansionItems.PLACEHOLDER_ITEM;
+
+                ItemStack item = sf.getItem().clone();
+                item.setAmount(Integer.parseInt(s2[2]));
+                return item;
+            } else {
+                // impossible
+                return null;
+            }
+        } catch (Exception ignored) {
+            try {
+                return primitive.get(key, DataType.ITEM_STACK);
+            } catch (Exception ignored2) {
+                return null;
+            }
+        }
+    }
+
     @Override
-    @NotNull
     public PersistentDataContainer toPrimitive(
-        @NotNull BlueprintInstance complex, @NotNull PersistentDataAdapterContext context) {
+        BlueprintInstance complex, PersistentDataAdapterContext context) {
         final PersistentDataContainer container = context.newPersistentDataContainer();
 
         for (int i = 0; i < complex.getRecipeItems().length; i++) {
-            ItemStack itemStack = complex.getRecipeItems()[i];
-            if (itemStack == null || itemStack.getType() == Material.AIR) {
-                continue;
-            }
-
-            if (itemStack.isSimilar(new ItemStack(itemStack.getType()))) {
-                // pure vanilla item
-                container.set(Keys.newKey("recipe_" + i), DataType.STRING, "mc;" + itemStack.getType().name() + ";" + itemStack.getAmount());
-                continue;
-            } else {
-                SlimefunItem sf = SlimefunItem.getByItem(itemStack);
-                if (sf != null) {
-                    if (itemStack.isSimilar(sf.getItem())) {
-                        // pure slimefun item
-                        container.set(Keys.newKey("recipe_" + i), DataType.STRING, "sf;" + sf.getId() + ";" + itemStack.getAmount());
-                        continue;
-                    }
-                }
-
-                // complex item
-                container.set(Keys.newKey("recipe_" + i), DataType.ITEM_STACK, itemStack);
-            }
+            setItemStack(container, "recipe_" + i, complex.getRecipeItems()[i]);
         }
 
         // container.set(Keys.RECIPE, DataType.ITEM_STACK_ARRAY, complex.getRecipeItems());
         if (complex.getItemStack() != null) {
-            container.set(Keys.OUTPUT, DataType.ITEM_STACK, complex.getItemStack());
+            setItemStack(container, Keys.OUTPUT, complex.getItemStack());
+//            container.set(Keys.OUTPUT, DataType.ITEM_STACK, complex.getItemStack());
         }
         return container;
     }
 
     @Override
-    @NotNull
     public BlueprintInstance fromPrimitive(
-        @NotNull PersistentDataContainer primitive, @NotNull PersistentDataAdapterContext context) {
-        ItemStack[] recipe = primitive.get(Keys.RECIPE, DataType.ITEM_STACK_ARRAY);
-        if (recipe == null) {
-            recipe = primitive.get(Keys.RECIPE2, DataType.ITEM_STACK_ARRAY);
-        }
-        if (recipe == null) {
-            recipe = primitive.get(Keys.RECIPE3, DataType.ITEM_STACK_ARRAY);
-        }
+        PersistentDataContainer primitive, PersistentDataAdapterContext context) {
+        @Nullable ItemStack @Nullable[] recipe = Keys.getRecipe(primitive);
         if (recipe == null) {
             // new format
             List<NamespacedKey> recipeKeys = primitive.getKeys().stream().filter(k -> k.getKey().startsWith("recipe_")).toList();
             recipe = new ItemStack[Math.max(9, recipeKeys.size())];
             for (NamespacedKey key : recipeKeys) {
                 int slot = Integer.parseInt(key.getKey().split("_")[1]);
-                try {
-                    var s = primitive.get(key, DataType.STRING);
-                    var s2 = s.split(";");
-                    if (s2[0].equals("mc")) {
-                        recipe[slot] = new ItemStack(Material.valueOf(s2[1]), Integer.parseInt(s2[2]));
-                    } else if (s2[0].equals("sf")) {
-                        SlimefunItem sf = SlimefunItem.getById(s2[1]);
-                        if (sf == null) sf = ExpansionItems.PLACEHOLDER_ITEM;
-
-                        recipe[slot] = sf.getItem().clone();
-                        recipe[slot].setAmount(Integer.parseInt(s2[2]));
-                    } else {
-                        // impossible
-                    }
-                } catch (Exception ignored) {
-                    var s = primitive.get(key, DataType.ITEM_STACK);
-                    recipe[slot] = s;
-                }
+                recipe[slot] = getItemStack(primitive, key);
             }
         }
-        ItemStack output = primitive.get(Keys.OUTPUT, DataType.ITEM_STACK);
-        if (output == null) {
-            output = primitive.get(Keys.OUTPUT2, DataType.ITEM_STACK);
-        }
-        if (output == null) {
-            output = primitive.get(Keys.OUTPUT3, DataType.ITEM_STACK);
+        ItemStack output;
+        try {
+            output = Keys.getOutput(primitive);
+        } catch (Exception ignored) {
+            // UncheckedIOException occurs randomly, seems DataType.ITEM_STACK no longer works.
+            output = getItemStack(primitive, Keys.OUTPUT);
         }
 
         if (recipe == null || output == null) {
-            return new BlueprintInstance(new ItemStack[0], new ItemStack(Material.AIR));
+            return BlueprintInstance.INVALID;
         }
         return new BlueprintInstance(recipe, output);
     }

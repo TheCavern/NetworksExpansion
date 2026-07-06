@@ -18,6 +18,7 @@ import io.github.thebusybiscuit.slimefun4.api.player.PlayerProfile;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction;
+import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
@@ -64,7 +65,7 @@ public class StorageCardConverter extends NetworkObject {
             public void init() {
                 setSize(27);
                 for (int slot : BACKGROUND_SLOTS) {
-                    addItem(slot, Icon.GRAY_BACKGROUND);
+                    addItem(slot, Icon.GRAY_BACKGROUND, ChestMenuUtils.getEmptyClickHandler());
                 }
                 addItem(CONVERT_SLOT, Icon.STORAGE_CONVERT_BUTTON);
             }
@@ -126,9 +127,7 @@ public class StorageCardConverter extends NetworkObject {
                     }
 
                     ItemMeta meta = quantumStorageItem.getItemMeta();
-                    QuantumCache cache = DataTypeMethods.getCustom(meta, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE);
-                    if (cache == null) cache = DataTypeMethods.getCustom(meta, Keys.QUANTUM_STORAGE_INSTANCE2, PersistentQuantumStorageType.TYPE);
-                    if (cache == null) cache = DataTypeMethods.getCustom(meta, Keys.QUANTUM_STORAGE_INSTANCE3, PersistentQuantumStorageType.TYPE);
+                    QuantumCache cache = Keys.getQuantumCache(meta);
                     if (cache == null) {
                         p.sendMessage(Lang.getString(
                             "messages.unsupported-operation.storage_card_converter.not_quantum_storage"));

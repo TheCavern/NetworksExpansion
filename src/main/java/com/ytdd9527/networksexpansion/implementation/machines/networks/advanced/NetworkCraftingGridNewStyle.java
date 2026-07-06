@@ -62,6 +62,7 @@ public class NetworkCraftingGridNewStyle extends AbstractGridNewStyle implements
     private static final int PAGE_PREVIOUS = 44;
     private static final int PAGE_NEXT = 53;
     private static final int TOGGLE_MODE_SLOT = 52;
+    @Deprecated
     private static final int JEG_SLOT = 32;
     private static final int CRAFT_BUTTON_SLOT = 33;
     private static final int OUTPUT_SLOT = 34;
@@ -221,66 +222,65 @@ public class NetworkCraftingGridNewStyle extends AbstractGridNewStyle implements
             times = 64;
         }
 
+        // Get node and, if it doesn't exist - escape
+        final NodeDefinition definition = NetworkStorage.getNode(menu.getLocation());
+        if (definition.getNode() == null) {
+            return;
+        }
+
+        NetworkRoot root = definition.getNode().getRoot();
+        root.refreshRootItems();
+
+        // Get the recipe input
+        final ItemStack[] inputs = new ItemStack[INGREDIENT_SLOTS.length];
+        int i = 0;
+        for (int recipeSlot : INGREDIENT_SLOTS) {
+            ItemStack stack = menu.getItemInSlot(recipeSlot);
+            inputs[i] = stack;
+            i++;
+        }
+
+        ItemStack crafted = null;
+
+        // Go through each slimefun recipe, trigger and set the ItemStack if found
+        for (Map.Entry<ItemStack[], ItemStack> entry :
+            SupportedCraftingTableRecipes.getRecipes().entrySet()) {
+            if (SupportedCraftingTableRecipes.testRecipe(inputs, entry.getKey())) {
+                crafted = entry.getValue();
+                break;
+            }
+        }
+
+        if (crafted != null) {
+            final SlimefunItem sfi2 = SlimefunItem.getByItem(crafted);
+            if (sfi2 != null && sfi2.isDisabled()) {
+                player.sendMessage(Lang.getString("messages.unsupported-operation.encoder.disabled_output"));
+                return;
+            }
+        }
+
+        // If no slimefun recipe found, try a vanilla one
+        if (crafted == null) {
+            crafted = Bukkit.craftItem(inputs, player.getWorld(), player);
+        }
+
+        // If no item crafted OR result doesn't fit, escape
+        if (crafted.getType() == Material.AIR || !BlockMenuUtil.fits(menu, crafted, OUTPUT_SLOT)) {
+            return;
+        }
+
+        // fire craft event
+        NetworkCraftEvent event = new NetworkCraftEvent(player, this, inputs, crafted);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+        crafted = event.getOutput();
         for (int k = 0; k < times; k++) {
-            // Get node and, if it doesn't exist - escape
-            final NodeDefinition definition = NetworkStorage.getNode(menu.getLocation());
-            if (definition.getNode() == null) {
-                return;
-            }
-
-            // Get the recipe input
-            final ItemStack[] inputs = new ItemStack[INGREDIENT_SLOTS.length];
-            int i = 0;
-            for (int recipeSlot : INGREDIENT_SLOTS) {
-                ItemStack stack = menu.getItemInSlot(recipeSlot);
-                inputs[i] = stack;
-                i++;
-            }
-
-            ItemStack crafted = null;
-
-            // Go through each slimefun recipe, trigger and set the ItemStack if found
-            for (Map.Entry<ItemStack[], ItemStack> entry :
-                SupportedCraftingTableRecipes.getRecipes().entrySet()) {
-                if (SupportedCraftingTableRecipes.testRecipe(inputs, entry.getKey())) {
-                    crafted = entry.getValue().clone();
-                    break;
-                }
-            }
-
-            if (crafted != null) {
-                final SlimefunItem sfi2 = SlimefunItem.getByItem(crafted);
-                if (sfi2 != null && sfi2.isDisabled()) {
-                    player.sendMessage(Lang.getString("messages.unsupported-operation.encoder.disabled_output"));
-                    return;
-                }
-            }
-
-            // If no slimefun recipe found, try a vanilla one
-            if (crafted == null) {
-                crafted = Bukkit.craftItem(inputs, player.getWorld(), player);
-            }
-
-            // If no item crafted OR result doesn't fit, escape
-            if (crafted.getType() == Material.AIR || !BlockMenuUtil.fits(menu, crafted, OUTPUT_SLOT)) {
-                return;
-            }
-
-            // fire craft event
-            NetworkCraftEvent event = new NetworkCraftEvent(player, this, inputs, crafted);
-            Bukkit.getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                return;
-            }
-            crafted = event.getOutput();
-
             // Push item
             if (crafted != null) {
-                BlockMenuUtil.pushItem(menu, crafted, OUTPUT_SLOT);
+                BlockMenuUtil.pushItem(menu, crafted.clone(), OUTPUT_SLOT);
             }
-
-            NetworkRoot root = definition.getNode().getRoot();
-            root.refreshRootItems();
 
             // Let's clear down all the items
             for (int recipeSlot : INGREDIENT_SLOTS) {

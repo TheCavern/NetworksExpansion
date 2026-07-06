@@ -13,6 +13,7 @@ import io.github.sefiraat.networks.network.NetworkRoot;
 import io.github.sefiraat.networks.network.NodeDefinition;
 import io.github.sefiraat.networks.network.NodeType;
 import io.github.sefiraat.networks.network.stackcaches.ItemRequest;
+import io.github.sefiraat.networks.slimefun.NetworkSlimefunItems;
 import io.github.sefiraat.networks.slimefun.network.NetworkObject;
 import io.github.sefiraat.networks.utils.StackUtils;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
@@ -50,6 +51,7 @@ public abstract class AbstractEncoder extends NetworkObject implements CraftType
     private static final int OUTPUT_SLOT = 34;
     private static final int ITEM_TARGET_DESC_SLOT = 26;
     private static final int ITEM_TARGET_SLOT = 35;
+    @Deprecated
     private static final int JEG_SLOT = 4;
     private static final int CHARGE_COST = 2000;
 
@@ -90,7 +92,7 @@ public abstract class AbstractEncoder extends NetworkObject implements CraftType
                     }
                     return false;
                 });
-                addJEGButton(menu, JEG_SLOT);
+                // addJEGButton(menu, JEG_SLOT);
                 var fix = menu.getItemInSlot(ITEM_TARGET_SLOT);
                 if (StackUtils.itemsMatch(fix, ChestMenuUtils.getBackground())) {
                     menu.replaceExistingItem(ITEM_TARGET_SLOT, null);
@@ -153,6 +155,17 @@ public abstract class AbstractEncoder extends NetworkObject implements CraftType
 
         ItemStack blueprint = blockMenu.getItemInSlot(BLANK_BLUEPRINT_SLOT);
 
+        if (blueprint == null || blueprint.getType() == Material.AIR) {
+            ItemStack bp = NetworkSlimefunItems.CRAFTING_BLUEPRINT.getItem();
+            blueprint = root.getItemStack0(blockMenu.getLocation(), new ItemRequest(bp, bp.getMaxStackSize()));
+            if (blueprint == null) {
+                player.sendMessage(Lang.getString("messages.feedback.no_blueprint_found"));
+                sendFeedback(blockMenu.getLocation(), FeedbackType.NO_BLUEPRINT_FOUND);
+                return false;
+            }
+            blockMenu.replaceExistingItem(BLANK_BLUEPRINT_SLOT, blueprint);
+        }
+
         SlimefunItem sfi = SlimefunItem.getByItem(blueprint);
         if (sfi != null && sfi.isDisabled()) {
             player.sendMessage(Lang.getString("messages.unsupported-operation.encoder.disabled_blueprint"));
@@ -178,20 +191,16 @@ public abstract class AbstractEncoder extends NetworkObject implements CraftType
         }
 
         ItemStack crafted = null;
-        ItemStack[] inp = inputs.clone();
-        for (int k = 0; k < inp.length; k++) {
-            if (inp[k] != null) {
-                inp[k] = ItemStackUtil.getCleanItem(inp[k]);
-            }
-        }
+        ItemStack[] inp = null;
 
         ItemStack target = blockMenu.getItemInSlot(ITEM_TARGET_SLOT);
-        if (target != null && target.getType() == Material.AIR) target = null;
+        if (target == null || target.getType() == Material.AIR) target = null;
 
-        for (var entries : CraftType.entries()) {
-            for (Map.Entry<ItemStack[], ItemStack> entry : entries) {
-                if (testRecipe(inputs, entry.getKey())) {
-                    crafted = ItemStackUtil.getCleanItem(entry.getValue().clone());
+        for (var e : CraftType.map().entrySet()) {
+            boolean found = false;
+            for (Map.Entry<ItemStack[], ItemStack> entry : e.getValue()) {
+                if (testRecipe(e.getKey(), inputs, entry.getKey())) {
+                    crafted = entry.getValue();
                     if (target != null && !StackUtils.itemsMatch(crafted, target)) {
                         continue;
                     }
@@ -201,8 +210,12 @@ public abstract class AbstractEncoder extends NetworkObject implements CraftType
                             inp[k] = ItemStackUtil.getCleanItem(inp[k]);
                         }
                     }
+                    found = true;
                     break;
                 }
+            }
+            if (found) {
+                break;
             }
         }
 
@@ -217,6 +230,7 @@ public abstract class AbstractEncoder extends NetworkObject implements CraftType
 
         if (crafted == null && canTestVanillaRecipe(inputs)) {
             crafted = Bukkit.craftItem(inputs.clone(), player.getWorld(), player);
+            inp = new ItemStack[RECIPE_SLOTS.length];
             for (int k = 0; k < RECIPE_SLOTS.length; k++) {
                 if (inputs[k] != null) {
                     inp[k] = StackUtils.getAsQuantity(inputs[k], 1);
@@ -224,7 +238,7 @@ public abstract class AbstractEncoder extends NetworkObject implements CraftType
             }
         }
 
-        if (crafted == null || crafted.getType() == Material.AIR) {
+        if (inp == null || crafted == null || crafted.getType() == Material.AIR) {
             player.sendMessage(Lang.getString("messages.unsupported-operation.encoder.invalid_recipe"));
             sendFeedback(blockMenu.getLocation(), FeedbackType.INVALID_RECIPE);
             return false;
@@ -232,7 +246,7 @@ public abstract class AbstractEncoder extends NetworkObject implements CraftType
 
         final ItemStack blueprintClone = StackUtils.getAsQuantity(blueprint, 1);
 
-        blueprintSetter(blueprintClone, inp, crafted);
+        blueprintSetter(blueprintClone, inp, crafted.clone());
         if (BlockMenuUtil.fits(blockMenu, blueprintClone, OUTPUT_SLOT)) {
             ItemStack recover = null;
             if (blueprint.getAmount() == 1) {
@@ -262,7 +276,7 @@ public abstract class AbstractEncoder extends NetworkObject implements CraftType
         return true;
     }
 
-    public void blueprintSetter(ItemStack itemStack, ItemStack[] inputs, ItemStack crafted) {
+    public void blueprintSetter(ItemStack itemStack, ItemStack @NotNull [] inputs, ItemStack crafted) {
         craftType().blueprintSetter(itemStack, inputs, crafted);
     }
 
@@ -274,8 +288,8 @@ public abstract class AbstractEncoder extends NetworkObject implements CraftType
         return craftType().getRecipeEntries();
     }
 
-    public boolean testRecipe(ItemStack[] inputs, ItemStack[] recipe) {
-        return craftType().testRecipe(inputs, recipe);
+    public boolean testRecipe(CraftType craftType, ItemStack[] inputs, ItemStack[] recipe) {
+        return craftType.testRecipe(inputs, recipe);
     }
     public boolean canTestVanillaRecipe(ItemStack[] inputs) {
         return false;

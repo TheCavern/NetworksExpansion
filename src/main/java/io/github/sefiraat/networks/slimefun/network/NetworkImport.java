@@ -35,8 +35,9 @@ public class NetworkImport extends NetworkObject {
         @NotNull ItemGroup itemGroup,
         @NotNull SlimefunItemStack item,
         @NotNull RecipeType recipeType,
-        ItemStack[] recipe) {
-        super(itemGroup, item, recipeType, recipe, NodeType.IMPORT);
+        ItemStack[] recipe,
+        ItemStack output) {
+        super(itemGroup, item, recipeType, recipe, output, NodeType.IMPORT);
 
         this.tickRate = new IntRangeSetting(this, "tick_rate", 1, 1, 10);
         addItemSetting(this.tickRate);

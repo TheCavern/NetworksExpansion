@@ -9,7 +9,9 @@ import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import com.ytdd9527.networksexpansion.core.items.SpecialSlimefunItem;
 import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
+import io.github.sefiraat.networks.NetworkStorage;
 import io.github.sefiraat.networks.Networks;
+import io.github.sefiraat.networks.network.NodeDefinition;
 import io.github.sefiraat.networks.network.stackcaches.ItemStackCache;
 import io.github.sefiraat.networks.network.stackcaches.QuantumCache;
 import io.github.sefiraat.networks.utils.Keys;
@@ -40,6 +42,7 @@ import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -512,6 +515,12 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
         if (cache == null) return;
 
         ItemStack storedItem = cache.getItemStack();
+        if (storedItem == null) return;
+
+        if (dupeDetect(b, p)) {
+            return;
+        }
+
         long capacity = cache.getLimitLong();
 
         ItemStack[] contents = inv.getContents();
@@ -546,6 +555,10 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
 
         ItemStack storedItem = cache.getItemStack();
         if (storedItem == null) {
+            return;
+        }
+
+        if (dupeDetect(b, p)) {
             return;
         }
 
@@ -684,18 +697,7 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
     protected void onPlace(@NotNull BlockPlaceEvent event) {
         final ItemStack itemStack = event.getItemInHand();
         final ItemMeta itemMeta = itemStack.getItemMeta();
-        QuantumCache cache =
-            DataTypeMethods.getCustom(itemMeta, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE);
-
-        if (cache == null) {
-            cache = DataTypeMethods.getCustom(
-                itemMeta, Keys.QUANTUM_STORAGE_INSTANCE2, PersistentQuantumStorageType.TYPE);
-        }
-
-        if (cache == null) {
-            cache = DataTypeMethods.getCustom(
-                itemMeta, Keys.QUANTUM_STORAGE_INSTANCE3, PersistentQuantumStorageType.TYPE);
-        }
+        QuantumCache cache = Keys.getQuantumCache(itemMeta);
 
         if (cache == null) {
             return;
@@ -714,8 +716,28 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
         return sfItemMeta.getPersistentDataContainer().equals(itemMeta.getPersistentDataContainer());
     }
 
-    // Here for SlimeAEPlugin used it
+    // Keep here for SlimeAEPlugin used it, don't delete it
     public static boolean isBlacklisted(@NotNull ItemStack itemStack) {
         return StackUtils.isBlacklisted(itemStack);
+    }
+
+    // see https://b23.tv/BV1ZMXuBpEAz
+    private static boolean dupeDetect(Block storage, Player player) {
+        for (BlockFace face : NetworkDirectional.VALID_FACES) {
+            NodeDefinition definition = NetworkStorage.getNode(storage.getRelative(face).getLocation());
+            if (definition != null && definition.getNode() != null) {
+                if (definition.getNode().getRoot().getCellsSize() != 0) {
+                    Networks.getInstance()
+                        .getLogger()
+                        .warning(String.format(
+                            Lang.getString("messages.unsupported-operation.quantum_storage.may_duping"),
+                            player.getName(),
+                            storage.getLocation()
+                        ));
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

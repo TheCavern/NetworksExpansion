@@ -51,7 +51,7 @@ import java.util.Set;
 
 @SuppressWarnings("DuplicatedCode")
 public abstract class AdvancedDirectional extends NetworkDirectional {
-    public static final @NotNull TransportMode DEFAULT_TRANSPORT_MODE = TransportMode.FIRST_STOP;
+    public static final @NotNull TransportMode DEFAULT_TRANSPORT_MODE = TransportMode.NONE;
     protected static final String DIRECTION = "direction";
     protected static final String OWNER_KEY = "uuid";
     protected static final String LIMIT_KEY = "transport_limit";
@@ -68,8 +68,6 @@ public abstract class AdvancedDirectional extends NetworkDirectional {
     protected static final Map<Location, Integer> NETWORK_LIMIT_QUANTITY_MAP = new HashMap<>();
     private static final Map<Location, TransportMode> NETWORK_TRANSPORT_MODE_MAP = new HashMap<>();
     final NetworkDirectional instance = this;
-    private final @NotNull ItemStack CARGO_NUMBER_ICON_CLONE;
-    private final @NotNull ItemStack TRANSPORT_MODE_ICON_CLONE;
 
     protected AdvancedDirectional(
         @NotNull ItemGroup itemGroup,
@@ -88,8 +86,6 @@ public abstract class AdvancedDirectional extends NetworkDirectional {
         @Range(from = 1, to = 64) int outputAmount,
         NodeType type) {
         super(itemGroup, item, recipeType, recipe, type);
-        this.CARGO_NUMBER_ICON_CLONE = Icon.SHOW_ICON.clone();
-        this.TRANSPORT_MODE_ICON_CLONE = Icon.TRANSPORT_MODE_ICON.clone();
 
         addItemHandler(new BlockTicker() {
             @Override
@@ -249,7 +245,7 @@ public abstract class AdvancedDirectional extends NetworkDirectional {
         blockData.setData(OWNER_KEY, event.getPlayer().getUniqueId().toString());
         blockData.setData(DIRECTION, BlockFace.SELF.name());
         blockData.setData(LIMIT_KEY, String.valueOf(getMaxLimit()));
-        blockData.setData(TRANSPORT_MODE_KEY, String.valueOf(TransportMode.FIRST_STOP));
+        blockData.setData(TRANSPORT_MODE_KEY, String.valueOf(DEFAULT_TRANSPORT_MODE));
         BlockMenu menu = blockData.getBlockMenu();
         if (menu != null) {
             NetworkUtils.applyConfig(instance, menu, event.getPlayer());
@@ -333,7 +329,7 @@ public abstract class AdvancedDirectional extends NetworkDirectional {
 
                 TransportMode mode;
                 if (rawMode == null) {
-                    mode = TransportMode.FIRST_STOP;
+                    mode = DEFAULT_TRANSPORT_MODE;
                     StorageCacheUtils.setData(location, TRANSPORT_MODE_KEY, String.valueOf(mode));
                 } else {
                     mode = TransportMode.valueOf(rawMode);
@@ -518,7 +514,7 @@ public abstract class AdvancedDirectional extends NetworkDirectional {
     }
 
     public @NotNull ItemStack getCargoNumberIcon() {
-        return this.CARGO_NUMBER_ICON_CLONE;
+        return Icon.SHOW_ICON;
     }
 
     public @NotNull ItemStack getMinusIcon() {
@@ -604,7 +600,8 @@ public abstract class AdvancedDirectional extends NetworkDirectional {
 
     @SuppressWarnings("deprecation")
     public void updateShowIcon(@NotNull Location location) {
-        ItemMeta itemMeta = this.CARGO_NUMBER_ICON_CLONE.getItemMeta();
+        ItemStack clone = Icon.SHOW_ICON.clone();
+        ItemMeta itemMeta = clone.getItemMeta();
         List<String> lore = new ArrayList<>();
         List<String> old = itemMeta.getLore();
         if (old != null) {
@@ -616,20 +613,20 @@ public abstract class AdvancedDirectional extends NetworkDirectional {
                 Lang.getString("messages.normal-operation.directional.limit_quantity"),
                 getLimitQuantity(location)));
         itemMeta.setLore(lore);
-        this.CARGO_NUMBER_ICON_CLONE.setItemMeta(itemMeta);
+        clone.setItemMeta(itemMeta);
 
         BlockMenu blockMenu = StorageCacheUtils.getMenu(location);
         if (blockMenu != null) {
             int slot = getCargoNumberSlot();
             if (slot != -1) {
-                blockMenu.replaceExistingItem(slot, this.CARGO_NUMBER_ICON_CLONE);
+                blockMenu.replaceExistingItem(slot, clone);
             }
         }
     }
 
-    @SuppressWarnings("deprecation")
     public void updateTransportModeIcon(@NotNull Location location) {
-        ItemMeta itemMeta = this.TRANSPORT_MODE_ICON_CLONE.getItemMeta();
+        ItemStack clone = Icon.TRANSPORT_MODE_ICON.clone();
+        ItemMeta itemMeta = clone.getItemMeta();
         List<String> lore = new ArrayList<>();
         List<String> old = itemMeta.getLore();
         if (old != null) {
@@ -639,15 +636,19 @@ public abstract class AdvancedDirectional extends NetworkDirectional {
             0,
             String.format(
                 Lang.getString("messages.normal-operation.directional.transport_mode"),
-                getCurrentTransportMode(location).getName()));
+                ""));
+        TransportMode current = getCurrentTransportMode(location);
+        for (TransportMode mode : TransportMode.values()) {
+            lore.add(ChatColors.color((mode == current ? "&a" : "&c") + "- " + mode.getRawName()));
+        }
         itemMeta.setLore(lore);
-        this.TRANSPORT_MODE_ICON_CLONE.setItemMeta(itemMeta);
+        clone.setItemMeta(itemMeta);
 
         BlockMenu blockMenu = StorageCacheUtils.getMenu(location);
         if (blockMenu != null) {
             int slot = getTransportModeSlot();
             if (slot != -1) {
-                blockMenu.replaceExistingItem(slot, this.TRANSPORT_MODE_ICON_CLONE);
+                blockMenu.replaceExistingItem(slot, clone);
             }
         }
     }

@@ -121,6 +121,7 @@ public abstract class NetworkObject extends SpecialSlimefunItem implements Admin
                     tickHangingBlocks(b);
                 }
 
+                // no exception
                 @Override
                 @NotNull
                 public Optional<IncompatibleItemHandlerException> validate(@NotNull SlimefunItem slimefunItem) {

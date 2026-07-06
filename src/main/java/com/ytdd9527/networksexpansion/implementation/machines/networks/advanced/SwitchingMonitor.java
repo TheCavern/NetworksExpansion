@@ -1,6 +1,7 @@
 package com.ytdd9527.networksexpansion.implementation.machines.networks.advanced;
 
 import com.balugaq.netex.api.interfaces.HangingBlock;
+import com.balugaq.netex.utils.Debug;
 import com.balugaq.netex.utils.InventoryUtil;
 import com.ytdd9527.networksexpansion.implementation.ExpansionItems;
 import com.ytdd9527.networksexpansion.utils.TextUtil;
@@ -37,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.IOException;
 
 @SuppressWarnings({"deprecation", "DuplicatedCode"})
 public class SwitchingMonitor extends NetworkObject implements HangingBlock, Placeable {
@@ -78,7 +80,14 @@ public class SwitchingMonitor extends NetworkObject implements HangingBlock, Pla
             clone.setItemMeta(meta);
             return clone;
         } else {
-            return DataSource.getItemStack(base64);
+            try {
+                return DataSource.getItemStack(base64);
+            } catch (IOException e) {
+                Debug.trace(e);
+                pdc.remove(ORIGINAL);
+                clone.setItemMeta(meta);
+                return clone;
+            }
         }
     }
 

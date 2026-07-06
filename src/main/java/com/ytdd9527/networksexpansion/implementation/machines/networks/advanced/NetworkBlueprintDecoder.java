@@ -148,16 +148,7 @@ public class NetworkBlueprintDecoder extends NetworkObject {
             return;
         }
 
-        BlueprintInstance blueprintInstance =
-            DataTypeMethods.getCustom(meta, Keys.BLUEPRINT_INSTANCE, PersistentCraftingBlueprintType.TYPE);
-        if (blueprintInstance == null) {
-            blueprintInstance =
-                DataTypeMethods.getCustom(meta, Keys.BLUEPRINT_INSTANCE2, PersistentCraftingBlueprintType.TYPE);
-        }
-        if (blueprintInstance == null) {
-            blueprintInstance =
-                DataTypeMethods.getCustom(meta, Keys.BLUEPRINT_INSTANCE3, PersistentCraftingBlueprintType.TYPE);
-        }
+        BlueprintInstance blueprintInstance = Keys.getBlueprintInstance(meta);
         if (blueprintInstance == null) {
             player.sendMessage(Lang.getString("messages.unsupported-operation.decoder.invalid_blueprint"));
             sendFeedback(menu.getLocation(), FeedbackType.INVALID_BLUEPRINT);

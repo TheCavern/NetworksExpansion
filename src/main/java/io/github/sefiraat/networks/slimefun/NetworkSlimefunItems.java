@@ -323,7 +323,8 @@ public class NetworkSlimefunItems {
                 NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(),
                 OPTIC_CABLE.getItem(), SlimefunItems.CARGO_INPUT_NODE, OPTIC_CABLE.getItem(),
                 NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(),
-            });
+            },
+            StackUtils.getAsQuantity(NetworksSlimefunItemStacks.NETWORK_IMPORT, 4));
 
         NETWORK_EXPORT = new NetworkExport(
             NetworksItemGroups.NETWORK_ITEMS,
@@ -333,7 +334,8 @@ public class NetworkSlimefunItems {
                 NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(),
                 OPTIC_CABLE.getItem(), SlimefunItems.CARGO_OUTPUT_NODE_2, OPTIC_CABLE.getItem(),
                 NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(),
-            });
+            },
+            StackUtils.getAsQuantity(NetworksSlimefunItemStacks.NETWORK_EXPORT, 4));
 
         NETWORK_GRABBER = new NetworkGrabber(
             NetworksItemGroups.NETWORK_ITEMS,
