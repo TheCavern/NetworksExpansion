@@ -71,6 +71,7 @@ messages:
     same_network: "Cannot send items to the same network"
     no_menu: "No menu found"
     unsupported_blueprint: "Unsupported blueprint"
+    broken_blueprint: "Damaged Blueprint"
   blueprint:
     title: "<click_info>Recipe specified"
     empty: "<passive>Empty"
@@ -144,9 +145,9 @@ messages:
       - "&6/networks setquantum <amount> - Sets the held quantum storage with the specified amount."
       - "&6/networks setcontainerid <containerId> - Sets the container ID of the network drawer."
       - "&6/networks worldedit <subCommand> - Slimefun WorldEdit functions."
-      - "&6/networks updateItem - Updates the held item."
+      - "&6/networks updateitem - Updates the held item."
       - "&6/networks getstorageitem <slot> - Gets the item from the specified slot of the network drawer you are looking at."
-      - "&6/networks viewLog - Outputs the log of the AdminDebuggable you are pointing at."
+      - "&6/networks viewlog - Outputs the log of the AdminDebuggable you are pointing at."
     example:
       help:
         - "&6/networks help - Shows this help message."
@@ -465,6 +466,7 @@ messages:
       custom_max_amount_not_supported: "<warning>This is not a valid advanced quantum storage"
       invalid_custom_max_amount: "<passive>[<gold>Networks Expansion<passive>] <error>Advanced quantum storage must be between 1 and 140,737,488,355,328"
       invalid_custom_max_amount_new: "<passive>[<gold>Networks Expansion<passive>] <error>Advanced quantum storage must be between 1 and 140,737,488,355,328"
+      may_duping: "Player \"%s\" attempted to use quantum storage to dupe at %s. (see https://b23.tv/BV1ZMXuBpEAz)"
     configurator:
       not_a_copyable_block: "<error>This block has no specified direction"
       not_a_pasteable_block: "<error>You must point to a network block with direction selection"
@@ -785,6 +787,7 @@ icons:
     lazy: "Lazy Mode"
     void: "Void Mode"
     specified_quantity: "Specified Quantity Only"
+    p2p: "P2P Mode"
   mechanism:
     transfers:
       data_title: "&a⇩Transfer Data⇩"
@@ -1247,9 +1250,9 @@ items:
       - "<warning> The development version of Networks Expansion does not accept GitHub Issues"
       - "<warning> The development version of Networks Expansion does not accept GitHub PRs"
       - "<passive> Version Information:"
-      - "<passive> Networks Expansion Version: v2.1.94"
+      - "<passive> Networks Expansion Version: (check git)"
       - "<passive> Version Status: Stable"
-      - "<passive> Version Update Time: 2026-4-10 23:27:58"
+      - "<passive> Version Update Time: (check git)"
       - "<passive> Development Status: Updating"
       - "<passive> Developer(s): ytdd9527, balugaq"
       - "<passive> Developer GitHub Page: <click_info>https://github.com/ytdd9527"
