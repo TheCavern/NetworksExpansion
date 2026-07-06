@@ -1,0 +1,47 @@
+[versions]
+com-bgsoftware-wildchestsapi = "2024.1"
+com-bgsoftware-wildstackerapi = "2023.2"
+com-github-balugaq-fluffymachines = "43d7444e4c"
+com-github-balugaq-justenoughguide = "7f21e113a2"
+com-github-houbb-pinyin = "0.4.0"
+io-github-schntgaispock-slimehud = "indev-Jul.06.2026-1431"
+com-github-sefiraat-netheopoiesis = "8d1af6c570"
+com-github-slimefunguguproject-infinityexpansion = "3c5db3650a"
+com-github-slimefun-slimefun = "indev-Jul.06.2026-1159"
+com-github-timetowndev-guguslimefunlib = "45627c6f8e"
+com-gmail-nossr50-mcmmo-mcmmo = "2.2.017"
+com-google-code-findbugs-annotations = "3.0.1u2"
+com-jeff-media-morepersistentdatatypes = "2.4.0"
+dev-rosewood-rosestacker = "1.5.23"
+dev-sefiraat-sefilib = "0.2.6"
+io-papermc-paper-paper-api = "1.21.4-R0.1-SNAPSHOT"
+net-guizhanss-guizhanlibplugin = "2.5.0-Cavern"
+org-bstats-bstats-bukkit = "3.0.2"
+shadow = "9.3.2"
+gitProperties = "2.5.7"
+lombok = "1.18.44"
+
+[libraries]
+com-bgsoftware-wildchestsapi = { module = "com.bgsoftware:WildChestsAPI", version.ref = "com-bgsoftware-wildchestsapi" }
+com-bgsoftware-wildstackerapi = { module = "com.bgsoftware:WildStackerAPI", version.ref = "com-bgsoftware-wildstackerapi" }
+com-github-balugaq-fluffymachines = { module = "com.github.balugaq:FluffyMachines", version.ref = "com-github-balugaq-fluffymachines" }
+com-github-balugaq-justenoughguide = { module = "com.github.balugaq:JustEnoughGuide", version.ref = "com-github-balugaq-justenoughguide" }
+com-github-houbb-pinyin = { module = "com.github.houbb:pinyin", version.ref = "com-github-houbb-pinyin" }
+io-github-schntgaispock-slimehud = { module = "io.github.schntgaispock.slimehud:SlimeHUD", version.ref = "io-github-schntgaispock-slimehud" }
+com-github-sefiraat-netheopoiesis = { module = "com.github.Sefiraat:Netheopoiesis", version.ref = "com-github-sefiraat-netheopoiesis" }
+com-github-slimefunguguproject-infinityexpansion = { module = "com.github.SlimefunGuguProject:InfinityExpansion", version.ref = "com-github-slimefunguguproject-infinityexpansion" }
+com-github-slimefun-slimefun = { module = "com.github.slimefun:Slimefun", version.ref = "com-github-slimefun-slimefun" }
+com-github-timetowndev-guguslimefunlib = { module = "com.github.TimetownDev:GuguSlimefunLib", version.ref = "com-github-timetowndev-guguslimefunlib" }
+com-gmail-nossr50-mcmmo-mcmmo = { module = "com.gmail.nossr50.mcMMO:mcMMO", version.ref = "com-gmail-nossr50-mcmmo-mcmmo" }
+com-google-code-findbugs-annotations = { module = "com.google.code.findbugs:annotations", version.ref = "com-google-code-findbugs-annotations" }
+com-jeff-media-morepersistentdatatypes = { module = "com.jeff-media:MorePersistentDataTypes", version.ref = "com-jeff-media-morepersistentdatatypes" }
+dev-rosewood-rosestacker = { module = "dev.rosewood:rosestacker", version.ref = "dev-rosewood-rosestacker" }
+dev-sefiraat-sefilib = { module = "dev.sefiraat:SefiLib", version.ref = "dev-sefiraat-sefilib" }
+io-papermc-paper-paper-api = { module = "io.papermc.paper:paper-api", version.ref = "io-papermc-paper-paper-api" }
+net-guizhanss-guizhanlibplugin = { module = "net.guizhanss:GuizhanLibPlugin", version.ref = "net-guizhanss-guizhanlibplugin" }
+org-bstats-bstats-bukkit = { module = "org.bstats:bstats-bukkit", version.ref = "org-bstats-bstats-bukkit" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+
+[plugins]
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+git-properties = { id = "com.gorylenko.gradle-git-properties", version.ref = "gitProperties" }

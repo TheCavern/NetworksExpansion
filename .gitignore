@@ -12,3 +12,5 @@
 .project
 dependency-reduced-pom.xml
 .git-versioned-pom.xml
+/build/
+/.gradle/
