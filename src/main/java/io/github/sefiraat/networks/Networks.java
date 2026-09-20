@@ -29,7 +29,7 @@ import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.paperlib.PaperLib;
 import lombok.Getter;
 //import net.guizhanss.guizhanlibplugin.updater.GuizhanUpdater;
-import org.bstats.bukkit.Metrics;
+//import org.bstats.bukkit.Metrics;
 import org.bstats.charts.AdvancedPie;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -174,7 +174,7 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
             c.setExecutor(new NetworksMain());
         }
 
-        setupMetrics();
+        //setupMetrics();
 
         Bukkit.getScheduler()
             .runTaskTimer(
@@ -256,7 +256,7 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
         getLogger().info(getLocalizationService().getString("messages.shutdown.disabled-successfully"));
     }
 
-    @SuppressWarnings("deprecation")
+    //@SuppressWarnings("deprecation")
 //    public void tryUpdate() {
 //        if (configManager.isAutoUpdate() && getDescription().getVersion().startsWith("Build")) {
 //            GuizhanUpdater.start(this, getFile(), username, repo, branch);
@@ -319,18 +319,18 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
         return minecraftVersion;
     }
 
-    public void setupMetrics() {
-        final Metrics metrics = new Metrics(this, 13644);
-
-        AdvancedPie networksChart = new AdvancedPie("networks", () -> {
-            Map<String, Integer> networksMap = new HashMap<>();
-            networksMap.put(
-                "Number of networks", NetworkController.getNetworks().size());
-            return networksMap;
-        });
-
-        metrics.addCustomChart(networksChart);
-    }
+//    public void setupMetrics() {
+//        final Metrics metrics = new Metrics(this, 13644);
+//
+//        AdvancedPie networksChart = new AdvancedPie("networks", () -> {
+//            Map<String, Integer> networksMap = new HashMap<>();
+//            networksMap.put(
+//                "Number of networks", NetworkController.getNetworks().size());
+//            return networksMap;
+//        });
+//
+//        metrics.addCustomChart(networksChart);
+//    }
 
     @NotNull
     @Override

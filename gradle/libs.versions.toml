@@ -1,7 +1,7 @@
 [versions]
 com-bgsoftware-wildchestsapi = "2024.1"
 com-bgsoftware-wildstackerapi = "2023.2"
-com-github-balugaq-fluffymachines = "43d7444e4c"
+com-github-balugaq-fluffymachines = "indev-Jul.06.2026-1252"
 com-github-balugaq-justenoughguide = "7f21e113a2"
 com-github-houbb-pinyin = "0.4.0"
 io-github-schntgaispock-slimehud = "indev-Jul.06.2026-1431"
@@ -24,7 +24,7 @@ lombok = "1.18.44"
 [libraries]
 com-bgsoftware-wildchestsapi = { module = "com.bgsoftware:WildChestsAPI", version.ref = "com-bgsoftware-wildchestsapi" }
 com-bgsoftware-wildstackerapi = { module = "com.bgsoftware:WildStackerAPI", version.ref = "com-bgsoftware-wildstackerapi" }
-com-github-balugaq-fluffymachines = { module = "com.github.balugaq:FluffyMachines", version.ref = "com-github-balugaq-fluffymachines" }
+com-github-balugaq-fluffymachines = { module = "io.ncbpfluffybear:FluffyMachines", version.ref = "com-github-balugaq-fluffymachines" }
 com-github-balugaq-justenoughguide = { module = "com.github.balugaq:JustEnoughGuide", version.ref = "com-github-balugaq-justenoughguide" }
 com-github-houbb-pinyin = { module = "com.github.houbb:pinyin", version.ref = "com-github-houbb-pinyin" }
 io-github-schntgaispock-slimehud = { module = "io.github.schntgaispock.slimehud:SlimeHUD", version.ref = "io-github-schntgaispock-slimehud" }
