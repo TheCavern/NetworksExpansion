@@ -1,6 +1,7 @@
 package io.github.sefiraat.networks.network.stackcaches;
 
 import com.balugaq.netex.utils.Lang;
+import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
 import lombok.Getter;
 import lombok.Setter;
 import net.guizhanss.guizhanlib.minecraft.helper.inventory.ItemStackHelper;
@@ -119,6 +120,13 @@ public class QuantumCache extends ItemStackCache {
         final ItemStack clone = this.getItemStack().clone();
         clone.setAmount((int) Math.min(this.amount, amount));
         reduceAmount(clone.getAmount());
+
+        final ItemStack refreshed = ItemStackUtil.refreshOutdatedItem(clone);
+        if (refreshed != null) {
+            this.setItemStack(ItemStackUtil.cloneItem(refreshed, 1));
+            return refreshed;
+        }
+
         return clone;
     }
 

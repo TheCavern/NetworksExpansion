@@ -114,11 +114,18 @@ public abstract class AbstractAutoCrafter extends NetworkObject implements SoftC
             }
         }
 
-        final ItemStack blueprint = blockMenu.getItemInSlot(BLUEPRINT_SLOT);
+        ItemStack blueprint = blockMenu.getItemInSlot(BLUEPRINT_SLOT);
 
         if (blueprint == null || blueprint.getType() == Material.AIR) {
             sendFeedback(blockMenu.getLocation(), FeedbackType.NO_BLUEPRINT_FOUND);
             return;
+        }
+
+        final ItemStack refreshedBlueprint = AbstractBlueprint.refreshOutdatedBlueprint(blueprint);
+        if (refreshedBlueprint != null) {
+            refreshedBlueprint.setAmount(blueprint.getAmount());
+            blockMenu.replaceExistingItem(BLUEPRINT_SLOT, refreshedBlueprint);
+            blueprint = refreshedBlueprint;
         }
 
         final long networkCharge = root.getRootPower();

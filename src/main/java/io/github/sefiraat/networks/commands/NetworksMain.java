@@ -13,6 +13,7 @@ import com.ytdd9527.networksexpansion.core.items.unusable.AbstractBlueprint;
 import com.ytdd9527.networksexpansion.implementation.machines.unit.NetworksDrawer;
 import com.ytdd9527.networksexpansion.utils.ParticleUtil;
 import com.ytdd9527.networksexpansion.utils.WorldUtils;
+import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
 import io.github.bakedlibs.dough.collections.Pair;
 import io.github.bakedlibs.dough.skins.PlayerHead;
 import io.github.bakedlibs.dough.skins.PlayerSkin;
@@ -21,7 +22,6 @@ import io.github.sefiraat.networks.network.NetworkRoot;
 import io.github.sefiraat.networks.network.stackcaches.BlueprintInstance;
 import io.github.sefiraat.networks.network.stackcaches.ItemRequest;
 import io.github.sefiraat.networks.network.stackcaches.QuantumCache;
-import io.github.sefiraat.networks.slimefun.NetworksSlimefunItemStacks;
 import io.github.sefiraat.networks.slimefun.network.AdminDebuggable;
 import io.github.sefiraat.networks.slimefun.network.NetworkQuantumStorage;
 import io.github.sefiraat.networks.utils.Keys;
@@ -872,14 +872,9 @@ public class NetworksMain implements TabExecutor {
                 return;
             }
 
-            final ItemStack stored = quantumCache.getItemStack();
-            final SlimefunItem sfi = SlimefunItem.getByItem(stored);
-            if (sfi != null) {
-                final String quantumStoredId = sfi.getId();
-                SlimefunItem sf = SlimefunItem.getById(quantumStoredId);
-                if (sf != null) {
-                    stored.setItemMeta(sf.getItem().getItemMeta());
-                }
+            final ItemStack refreshed = ItemStackUtil.refreshOutdatedItem(quantumCache.getItemStack());
+            if (refreshed != null) {
+                quantumCache.setItemStack(refreshed);
                 player.sendMessage(Lang.getString("messages.commands.updated-item-in-quantum-storage"));
             }
             DataTypeMethods.setCustom(
@@ -1093,12 +1088,7 @@ public class NetworksMain implements TabExecutor {
                         return true;
                     }
 
-                    if (args.length == 1) {
-                        player.sendMessage(getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "keyInMeta"));
-                        return true;
-                    }
-
-                    String before = args[1];
+                    String before = args.length > 1 ? args[1] : "";
                     fixBlueprint(player, before);
                     return true;
                 }
@@ -1553,18 +1543,28 @@ public class NetworksMain implements TabExecutor {
 
         BlueprintInstance instance = Keys.getBlueprintInstance(blueprintMeta);
 
-        if (instance == null) {
+        if (instance == null || instance == BlueprintInstance.INVALID) {
             player.sendMessage(Lang.getString("messages.commands.invalid-blueprint"));
             return;
         }
 
-        ItemStack fix = NetworksSlimefunItemStacks.CRAFTING_BLUEPRINT.clone();
-        ItemStack item2 = instance.getItemStack();
-        if (item2 != null) {
-            AbstractBlueprint.setBlueprint(fix, instance.getRecipeItems(), item2);
+        ItemStack fixed = AbstractBlueprint.refreshOutdatedBlueprint(blueprint);
+
+        if (fixed == null) {
+            // The blueprint is not outdated by content, but it may still carry a legacy namespaced key
+            final BlueprintInstance primary = DataTypeMethods.getCustom(
+                blueprintMeta, Keys.BLUEPRINT_INSTANCE, PersistentCraftingBlueprintType.TYPE);
+            if (primary == null) {
+                fixed = blueprint.clone();
+                AbstractBlueprint.setBlueprint(fixed, instance.getRecipeItems(), instance.getItemStack());
+            } else {
+                player.sendMessage(Lang.getString("messages.commands.blueprint-up-to-date"));
+                return;
+            }
         }
 
-        blueprint.setItemMeta(fix.getItemMeta());
+        fixed.setAmount(blueprint.getAmount());
+        blueprint.setItemMeta(fixed.getItemMeta());
 
         player.sendMessage(Lang.getString("messages.commands.fixed-blueprint"));
     }
@@ -1600,7 +1600,6 @@ public class NetworksMain implements TabExecutor {
                     // case "help", "updateitem" -> List.of();
                     case "getstorageitem" -> List.of("<slot>");
                     case "fillquantum", "addstorageitem", "reducestorageitem", "setquantum" -> List.of("<amount>");
-                    case "fixblueprint" -> List.of("<keyInMeta>");
                     case "setcontainerid" -> List.of("<containerId>");
                     case "worldedit" -> List.of(
                         "pos1",

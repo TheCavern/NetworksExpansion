@@ -134,6 +134,13 @@ public class NetworkBlueprintDecoder extends NetworkObject {
             return;
         }
 
+        final ItemStack refreshedBlueprint = AbstractBlueprint.refreshOutdatedBlueprint(input);
+        if (refreshedBlueprint != null) {
+            refreshedBlueprint.setAmount(input.getAmount());
+            menu.replaceExistingItem(getInputSlot(), refreshedBlueprint);
+            input = refreshedBlueprint;
+        }
+
         SlimefunItem item = SlimefunItem.getByItem(input);
         if (!(item instanceof AbstractBlueprint)) {
             player.sendMessage(Lang.getString("messages.unsupported-operation.decoder.not_blueprint"));

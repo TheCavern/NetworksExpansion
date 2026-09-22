@@ -121,6 +121,7 @@ messages:
     must-hand-blueprint: "<error>You must be holding a blueprint"
     invalid-blueprint: "<error>Could not get blueprint NBT"
     fixed-blueprint: "<success>Blueprint fixed"
+    blueprint-up-to-date: "<warning>The held blueprint is already up to date"
     updated-quantum-storage: "<success>Item updated"
     must-hand-quantum-storage: "<error>You must be holding a quantum storage"
     no-set-item: "<error>Quantum storage has no item specified or is damaged"

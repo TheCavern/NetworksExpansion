@@ -657,8 +657,11 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
             itemMeta.setLore(lore == null || lore.isEmpty() ? null : lore);
             clone.setItemMeta(itemMeta);
 
+            final ItemStack refreshed = ItemStackUtil.refreshOutdatedItem(clone);
+            final ItemStack storedItem = refreshed == null ? clone : refreshed;
+
             final QuantumCache cache =
-                new QuantumCache(clone, amount, maxAmount, voidExcess, this.supportsCustomMaxAmount);
+                new QuantumCache(storedItem, amount, maxAmount, voidExcess, this.supportsCustomMaxAmount);
 
             updateDisplayItem(menu, cache);
             return cache;

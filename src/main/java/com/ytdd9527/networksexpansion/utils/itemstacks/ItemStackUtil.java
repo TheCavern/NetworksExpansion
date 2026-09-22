@@ -6,7 +6,9 @@ import com.balugaq.netex.utils.Debug;
 import com.balugaq.netex.utils.InventoryUtil;
 import com.balugaq.netex.utils.NetworksVersionedEnchantment;
 import com.ytdd9527.networksexpansion.utils.TextUtil;
+import io.github.sefiraat.networks.utils.Keys;
 import io.github.sefiraat.networks.utils.StackUtils;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.nms.ItemNameAdapter;
 import io.github.thebusybiscuit.slimefun4.utils.itemstack.ItemStackWrapper;
@@ -84,6 +86,89 @@ public final class ItemStackUtil {
      */
     public static boolean isItemNull(@Nullable ItemStack item) {
         return item == null || item.getType() == Material.AIR || item.getAmount() == 0;
+    }
+
+    /**
+     * Check whether the given {@link ItemStack} is a Slimefun item whose display properties
+     * (display name, lore or custom model data) no longer match the currently registered
+     * version of the item.
+     * <p>
+     * If the item is outdated, a refreshed clone is returned with the display name, lore and
+     * custom model data updated to match the registered item. All other meta data, including
+     * the persistent data container, is preserved.
+     * <p>
+     * Items which carry their own instance data (quantum storages, blueprints, etc.) are skipped
+     * as their lore and persistent data container are intentionally different from the registered
+     * item.
+     *
+     * @param itemStack the item to check
+     * @return a refreshed clone if the item was outdated, otherwise null
+     */
+    @Nullable
+    public static ItemStack refreshOutdatedItem(@Nullable ItemStack itemStack) {
+        if (ItemStackUtil.isItemNull(itemStack)) {
+            return null;
+        }
+
+        final ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null) {
+            return null;
+        }
+
+        try {
+            if (Keys.getQuantumCache(itemMeta) != null || Keys.getBlueprintInstance(itemMeta) != null) {
+                return null;
+            }
+        } catch (Throwable ignored) {
+            return null;
+        }
+
+        final SlimefunItem slimefunItem = SlimefunItem.getByItem(itemStack);
+        if (slimefunItem == null) {
+            return null;
+        }
+
+        final ItemStack registeredItem = slimefunItem.getItem();
+        if (ItemStackUtil.isItemNull(registeredItem)) {
+            return null;
+        }
+
+        final ItemMeta registeredMeta = registeredItem.getItemMeta();
+        if (registeredMeta == null) {
+            return null;
+        }
+
+        final boolean nameOutdated = registeredMeta.hasDisplayName()
+            && !(itemMeta.hasDisplayName()
+            && Objects.equals(itemMeta.getDisplayName(), registeredMeta.getDisplayName()));
+        final boolean loreOutdated = registeredMeta.hasLore()
+            && !Objects.equals(itemMeta.getLore(), registeredMeta.getLore());
+        final boolean modelDataOutdated = registeredMeta.hasCustomModelData()
+            && !(itemMeta.hasCustomModelData()
+            && itemMeta.getCustomModelData() == registeredMeta.getCustomModelData());
+
+        if (!nameOutdated && !loreOutdated && !modelDataOutdated) {
+            return null;
+        }
+
+        final ItemStack refreshed = ItemStackUtil.cloneItem(itemStack);
+        final ItemMeta refreshedMeta = refreshed.getItemMeta();
+        if (refreshedMeta == null) {
+            return null;
+        }
+
+        if (registeredMeta.hasDisplayName()) {
+            refreshedMeta.setDisplayName(registeredMeta.getDisplayName());
+        }
+        if (registeredMeta.hasLore()) {
+            refreshedMeta.setLore(registeredMeta.getLore());
+        }
+        if (registeredMeta.hasCustomModelData()) {
+            refreshedMeta.setCustomModelData(registeredMeta.getCustomModelData());
+        }
+
+        refreshed.setItemMeta(refreshedMeta);
+        return refreshed;
     }
 
     /**
