@@ -281,6 +281,13 @@ public abstract class NetworkDirectional extends NetworkObject {
         sendFeedback(block.getLocation(), FeedbackType.TICKING);
         addToRegistry(block);
         updateGui(blockMenu);
+
+        if (blockMenu != null) {
+            // Refresh outdated player heads (legacy SkullOwner format -> profile component)
+            ItemStackUtil.refreshOutdatedSkulls(blockMenu, getItemSlots());
+            ItemStackUtil.refreshOutdatedSkulls(blockMenu, getInputSlots());
+            ItemStackUtil.refreshOutdatedSkulls(blockMenu, getOutputSlots());
+        }
     }
 
     protected void onUniqueTick() {

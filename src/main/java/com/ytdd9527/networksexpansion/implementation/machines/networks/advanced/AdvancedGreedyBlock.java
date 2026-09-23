@@ -1,14 +1,19 @@
 package com.ytdd9527.networksexpansion.implementation.machines.networks.advanced;
 
 import com.balugaq.netex.api.helpers.Icon;
+import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.ytdd9527.networksexpansion.implementation.ExpansionItems;
+import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
 import io.github.sefiraat.networks.network.NodeType;
 import io.github.sefiraat.networks.slimefun.network.NetworkObject;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction;
+import me.mrCookieSlime.Slimefun.Objects.handlers.BlockTicker;
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.block.Block;
@@ -34,6 +39,24 @@ public class AdvancedGreedyBlock extends NetworkObject {
             this.getSlotsToDrop().add(slot);
         }
         this.getSlotsToDrop().add(TEMPLATE_SLOT);
+
+        addItemHandler(new BlockTicker() {
+
+            @Override
+            public boolean isSynchronized() {
+                return false;
+            }
+
+            @Override
+            public void tick(@NotNull Block block, SlimefunItem item, @NotNull SlimefunBlockData data) {
+                final BlockMenu blockMenu = data.getBlockMenu();
+                if (blockMenu == null) {
+                    return;
+                }
+                ItemStackUtil.refreshOutdatedSkulls(blockMenu, TEMPLATE_SLOT);
+                ItemStackUtil.refreshOutdatedSkulls(blockMenu, INPUT_SLOTS);
+            }
+        });
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.balugaq.netex.api.helpers.Icon;
 import com.balugaq.netex.utils.BlockMenuUtil;
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
+import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
 import io.github.sefiraat.networks.NetworkStorage;
 import io.github.sefiraat.networks.network.NodeDefinition;
 import io.github.sefiraat.networks.network.NodeType;
@@ -75,6 +76,7 @@ public class NetworkExport extends NetworkObject {
                             return;
                         }
                         addToRegistry(block);
+                        ItemStackUtil.refreshOutdatedSkulls(blockMenu, TEST_ITEM_SLOT, OUTPUT_ITEM_SLOT);
                         tryFetchItem(blockMenu);
                     }
                 }

@@ -3,6 +3,7 @@ package io.github.sefiraat.networks.slimefun.network;
 import com.balugaq.netex.api.enums.FeedbackType;
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
+import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
 import dev.sefiraat.sefilib.misc.ParticleUtils;
 import io.github.sefiraat.networks.NetworkStorage;
 import io.github.sefiraat.networks.Networks;
@@ -80,6 +81,7 @@ public class NetworkVacuum extends NetworkObject {
                         return;
                     }
                     addToRegistry(block);
+                    ItemStackUtil.refreshOutdatedSkulls(blockMenu, INPUT_SLOTS);
                     tryAddItem(blockMenu);
                     Bukkit.getScheduler().runTask(Networks.getInstance(), bukkitTask -> findItem(blockMenu));
                 }

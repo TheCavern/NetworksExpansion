@@ -145,6 +145,10 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
             return;
         }
         itemStack.setAmount(1);
+        final ItemStack skullRefreshed = ItemStackUtil.refreshOutdatedSkull(itemStack);
+        if (skullRefreshed != null) {
+            itemStack = skullRefreshed;
+        }
         cache.setItemStack(itemStack);
         cache.setAmount(amount);
         updateDisplayItem(blockMenu, cache);
@@ -279,7 +283,7 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
     }
 
     public static void setItem(@NotNull BlockMenu blockMenu, @NotNull Player player) {
-        final ItemStack itemStack = player.getItemOnCursor().clone();
+        ItemStack itemStack = player.getItemOnCursor().clone();
 
         if (StackUtils.isBlacklisted(itemStack)) {
             return;
@@ -292,6 +296,10 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
             return;
         }
         itemStack.setAmount(1);
+        final ItemStack skullRefreshed = ItemStackUtil.refreshOutdatedSkull(itemStack);
+        if (skullRefreshed != null) {
+            itemStack = skullRefreshed;
+        }
         cache.setItemStack(itemStack);
         updateDisplayItem(blockMenu, cache);
         syncBlock(blockMenu.getLocation(), cache);
@@ -344,6 +352,9 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
         if (blockMenu.hasViewer()) {
             updateDisplayItem(blockMenu, cache);
         }
+
+        // Refresh outdated player heads (legacy SkullOwner format -> profile component)
+        ItemStackUtil.refreshOutdatedSkulls(blockMenu, INPUT_SLOT, OUTPUT_SLOT);
 
         // Move items from the input slot into the card
         final ItemStack input = blockMenu.getItemInSlot(INPUT_SLOT);
@@ -657,8 +668,14 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
             itemMeta.setLore(lore == null || lore.isEmpty() ? null : lore);
             clone.setItemMeta(itemMeta);
 
-            final ItemStack refreshed = ItemStackUtil.refreshOutdatedItem(clone);
-            final ItemStack storedItem = refreshed == null ? clone : refreshed;
+            ItemStack storedItem = ItemStackUtil.refreshOutdatedItem(clone);
+            if (storedItem == null) {
+                storedItem = clone;
+            }
+            final ItemStack skullRefreshed = ItemStackUtil.refreshOutdatedSkull(storedItem);
+            if (skullRefreshed != null) {
+                storedItem = skullRefreshed;
+            }
 
             final QuantumCache cache =
                 new QuantumCache(storedItem, amount, maxAmount, voidExcess, this.supportsCustomMaxAmount);

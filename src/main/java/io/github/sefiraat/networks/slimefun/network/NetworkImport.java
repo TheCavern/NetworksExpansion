@@ -2,6 +2,7 @@ package io.github.sefiraat.networks.slimefun.network;
 
 import com.balugaq.netex.api.enums.FeedbackType;
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
+import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
 import io.github.sefiraat.networks.NetworkStorage;
 import io.github.sefiraat.networks.network.NodeDefinition;
 import io.github.sefiraat.networks.network.NodeType;
@@ -63,6 +64,7 @@ public class NetworkImport extends NetworkObject {
                         return;
                     }
                     addToRegistry(block);
+                    ItemStackUtil.refreshOutdatedSkulls(blockMenu, INPUT_SLOTS);
                     tryAddItem(blockMenu);
                 }
             }

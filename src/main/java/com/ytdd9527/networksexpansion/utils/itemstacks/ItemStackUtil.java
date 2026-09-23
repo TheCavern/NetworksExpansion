@@ -12,6 +12,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.nms.ItemNameAdapter;
 import io.github.thebusybiscuit.slimefun4.utils.itemstack.ItemStackWrapper;
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
@@ -22,6 +23,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
@@ -169,6 +171,89 @@ public final class ItemStackUtil {
 
         refreshed.setItemMeta(refreshedMeta);
         return refreshed;
+    }
+
+    /**
+     * Mojang changed how player heads are saved in 1.20.5+: the legacy {@code SkullOwner} NBT tag
+     * was replaced by the {@code minecraft:profile} item component. Player heads stored in
+     * inventories before the update (for example inside Slimefun GUI slots) can therefore no
+     * longer be matched against freshly obtained heads.
+     * <p>
+     * This method detects heads whose skull data is not represented in the new component format
+     * and re-applies the meta onto a fresh {@link ItemStack} so the profile gets written in the
+     * modern format. If the item already matches its modern representation (or does not need any
+     * update), null is returned.
+     *
+     * @param itemStack the item to check
+     * @return a refreshed clone if the head was outdated, otherwise null
+     */
+    @Nullable
+    public static ItemStack refreshOutdatedSkull(@Nullable ItemStack itemStack) {
+        if (!StackUtils.IS_1_20_5 || ItemStackUtil.isItemNull(itemStack)) {
+            return null;
+        }
+
+        if (itemStack.getType() != Material.PLAYER_HEAD || !itemStack.hasItemMeta()) {
+            return null;
+        }
+
+        final ItemMeta itemMeta = itemStack.getItemMeta();
+        if (!(itemMeta instanceof SkullMeta skullMeta) || !skullMeta.hasOwner()) {
+            return null;
+        }
+
+        final ItemStack refreshed = new ItemStack(Material.PLAYER_HEAD, itemStack.getAmount());
+        if (!refreshed.setItemMeta(itemMeta)) {
+            return null;
+        }
+
+        return refreshed.isSimilar(itemStack) ? null : refreshed;
+    }
+
+    /**
+     * Refresh outdated player heads in the given slots of a {@link BlockMenu}.
+     *
+     * @param blockMenu the menu to refresh
+     * @param slots     the slots to check
+     */
+    public static void refreshOutdatedSkulls(@Nullable BlockMenu blockMenu, int @NotNull ... slots) {
+        if (blockMenu == null || slots.length == 0) {
+            return;
+        }
+
+        for (int slot : slots) {
+            final ItemStack itemStack = blockMenu.getItemInSlot(slot);
+            if (itemStack == null || itemStack.getType() != Material.PLAYER_HEAD) {
+                continue;
+            }
+            final ItemStack refreshed = ItemStackUtil.refreshOutdatedSkull(itemStack);
+            if (refreshed != null) {
+                blockMenu.replaceExistingItem(slot, refreshed);
+            }
+        }
+    }
+
+    /**
+     * Refresh outdated player heads in all slots of a {@link BlockMenu}.
+     *
+     * @param blockMenu the menu to refresh
+     */
+    public static void refreshOutdatedSkulls(@Nullable BlockMenu blockMenu) {
+        if (blockMenu == null) {
+            return;
+        }
+
+        final int size = blockMenu.toInventory().getSize();
+        for (int slot = 0; slot < size; slot++) {
+            final ItemStack itemStack = blockMenu.getItemInSlot(slot);
+            if (itemStack == null || itemStack.getType() != Material.PLAYER_HEAD) {
+                continue;
+            }
+            final ItemStack refreshed = ItemStackUtil.refreshOutdatedSkull(itemStack);
+            if (refreshed != null) {
+                blockMenu.replaceExistingItem(slot, refreshed);
+            }
+        }
     }
 
     /**

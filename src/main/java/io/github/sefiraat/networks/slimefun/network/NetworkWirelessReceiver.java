@@ -3,6 +3,7 @@ package io.github.sefiraat.networks.slimefun.network;
 import com.balugaq.netex.api.enums.FeedbackType;
 import com.balugaq.netex.api.helpers.Icon;
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
+import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
 import io.github.sefiraat.networks.NetworkStorage;
 import io.github.sefiraat.networks.network.NodeDefinition;
 import io.github.sefiraat.networks.network.NodeType;
@@ -64,6 +65,8 @@ public class NetworkWirelessReceiver extends NetworkObject {
             sendFeedback(blockMenu.getLocation(), FeedbackType.NO_NETWORK_FOUND);
             return;
         }
+
+        ItemStackUtil.refreshOutdatedSkulls(blockMenu, RECEIVED_SLOT);
 
         final ItemStack itemStack = blockMenu.getItemInSlot(RECEIVED_SLOT);
 
