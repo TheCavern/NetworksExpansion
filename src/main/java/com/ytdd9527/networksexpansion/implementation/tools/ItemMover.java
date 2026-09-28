@@ -7,6 +7,7 @@ import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import com.ytdd9527.networksexpansion.core.items.SpecialSlimefunItem;
 import com.ytdd9527.networksexpansion.implementation.ExpansionItemStacks;
 import com.ytdd9527.networksexpansion.implementation.machines.unit.NetworksDrawer;
+import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
 import io.github.mooy1.infinityexpansion.items.storage.StorageCache;
 import io.github.mooy1.infinityexpansion.items.storage.StorageUnit;
 import io.github.sefiraat.networks.managers.SupportedPluginManager;
@@ -201,6 +202,11 @@ public class ItemMover extends SpecialSlimefunItem implements DistinctiveItem {
             return;
         }
 
+        final ItemStack refreshedIncoming = ItemStackUtil.refreshOutdatedItem(incoming);
+        if (refreshedIncoming != null) {
+            incoming = refreshedIncoming;
+        }
+
         if (incoming.getAmount() > 0) {
             ItemStack stored = getStoredItemStack(mover);
             long storedAmount = getStoredAmount(mover);
@@ -209,6 +215,10 @@ public class ItemMover extends SpecialSlimefunItem implements DistinctiveItem {
                 setStoredAmount(mover, incoming.getAmount());
                 incoming.setAmount(0);
             } else if (StackUtils.itemsMatch(stored, incoming)) {
+                final ItemStack refreshedStored = ItemStackUtil.refreshOutdatedItem(stored);
+                if (refreshedStored != null) {
+                    setStoredItemStack(mover, ItemStackUtil.cloneItem(refreshedStored, 1));
+                }
                 long maxCanReceive = Long.MAX_VALUE - storedAmount;
                 int incomingAmount = incoming.getAmount();
                 long canReceive = Math.min(maxCanReceive, incomingAmount);
@@ -440,6 +450,12 @@ public class ItemMover extends SpecialSlimefunItem implements DistinctiveItem {
         if (have >= barrel.getLimit()) {
             player.sendMessage(Lang.getString("messages.unsupported-operation.item_mover.full_storage"));
             return;
+        }
+
+        final ItemStack refreshedStored = ItemStackUtil.refreshOutdatedItem(storedItemStack);
+        if (refreshedStored != null) {
+            setStoredItemStack(mover, ItemStackUtil.cloneItem(refreshedStored, 1));
+            storedItemStack = refreshedStored;
         }
 
         ItemStack clone = StackUtils.getAsQuantity(storedItemStack, storedAmount);

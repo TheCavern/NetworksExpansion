@@ -4,6 +4,7 @@ import com.balugaq.netex.api.interfaces.CraftTyped;
 import com.balugaq.netex.utils.Lang;
 import com.ytdd9527.networksexpansion.utils.TextUtil;
 import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
+import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.network.stackcaches.BlueprintInstance;
 import io.github.sefiraat.networks.utils.Keys;
 import io.github.sefiraat.networks.utils.Theme;
@@ -95,6 +96,10 @@ public abstract class AbstractBlueprint extends UnusableSlimefunItem implements 
      */
     @Nullable
     public static ItemStack refreshOutdatedBlueprint(@NotNull ItemStack blueprint) {
+        if (!Networks.getConfigManager().isAutoRefreshBlueprints()) {
+            return null;
+        }
+
         final ItemMeta blueprintMeta = blueprint.getItemMeta();
         if (blueprintMeta == null) {
             return null;

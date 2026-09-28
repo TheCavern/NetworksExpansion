@@ -6,6 +6,7 @@ import com.balugaq.netex.utils.Debug;
 import com.balugaq.netex.utils.InventoryUtil;
 import com.balugaq.netex.utils.NetworksVersionedEnchantment;
 import com.ytdd9527.networksexpansion.utils.TextUtil;
+import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.utils.Keys;
 import io.github.sefiraat.networks.utils.StackUtils;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
@@ -108,6 +109,10 @@ public final class ItemStackUtil {
      */
     @Nullable
     public static ItemStack refreshOutdatedItem(@Nullable ItemStack itemStack) {
+        if (!Networks.getConfigManager().isAutoRefreshItems()) {
+            return null;
+        }
+
         if (ItemStackUtil.isItemNull(itemStack)) {
             return null;
         }
@@ -174,6 +179,34 @@ public final class ItemStackUtil {
     }
 
     /**
+     * Refresh outdated items (display name, lore or custom model data no longer matching the
+     * registered item) in the given slots of a {@link BlockMenu}.
+     *
+     * @param blockMenu the menu to refresh
+     * @param slots     the slots to check
+     */
+    public static void refreshOutdatedItems(@Nullable BlockMenu blockMenu, int @NotNull ... slots) {
+        if (!Networks.getConfigManager().isAutoRefreshItems()) {
+            return;
+        }
+
+        if (blockMenu == null || slots.length == 0) {
+            return;
+        }
+
+        for (int slot : slots) {
+            final ItemStack itemStack = blockMenu.getItemInSlot(slot);
+            if (itemStack == null || itemStack.getType() == Material.AIR) {
+                continue;
+            }
+            final ItemStack refreshed = ItemStackUtil.refreshOutdatedItem(itemStack);
+            if (refreshed != null) {
+                blockMenu.replaceExistingItem(slot, refreshed);
+            }
+        }
+    }
+
+    /**
      * Mojang changed how player heads are saved in 1.20.5+: the legacy {@code SkullOwner} NBT tag
      * was replaced by the {@code minecraft:profile} item component. Player heads stored in
      * inventories before the update (for example inside Slimefun GUI slots) can therefore no
@@ -189,6 +222,10 @@ public final class ItemStackUtil {
      */
     @Nullable
     public static ItemStack refreshOutdatedSkull(@Nullable ItemStack itemStack) {
+        if (!Networks.getConfigManager().isAutoRefreshSkulls()) {
+            return null;
+        }
+
         if (!StackUtils.IS_1_20_5 || ItemStackUtil.isItemNull(itemStack)) {
             return null;
         }
@@ -217,6 +254,10 @@ public final class ItemStackUtil {
      * @param slots     the slots to check
      */
     public static void refreshOutdatedSkulls(@Nullable BlockMenu blockMenu, int @NotNull ... slots) {
+        if (!Networks.getConfigManager().isAutoRefreshSkulls()) {
+            return;
+        }
+
         if (blockMenu == null || slots.length == 0) {
             return;
         }
@@ -239,6 +280,10 @@ public final class ItemStackUtil {
      * @param blockMenu the menu to refresh
      */
     public static void refreshOutdatedSkulls(@Nullable BlockMenu blockMenu) {
+        if (!Networks.getConfigManager().isAutoRefreshSkulls()) {
+            return;
+        }
+
         if (blockMenu == null) {
             return;
         }

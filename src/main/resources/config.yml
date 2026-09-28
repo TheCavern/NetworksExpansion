@@ -1,6 +1,17 @@
 # Auto update from Guizhan Build is enabled by default.
 auto-update: true
 
+# Automatically refresh outdated items (display name, lore or custom model data)
+# so they always match the currently registered Slimefun items.
+auto-refresh-items: true
+
+# Automatically refresh outdated player heads (legacy SkullOwner format from
+# before 1.20.5) inside BlockMenus.
+auto-refresh-skulls: true
+
+# Automatically refresh outdated blueprints in autocrafters and decoders.
+auto-refresh-blueprints: true
+
 # Language
 language: en-US
 

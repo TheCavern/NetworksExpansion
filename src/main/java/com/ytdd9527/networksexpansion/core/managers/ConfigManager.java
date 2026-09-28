@@ -63,6 +63,18 @@ public class ConfigManager {
         return Networks.getInstance().getConfig().getBoolean("auto-update", false);
     }
 
+    public boolean isAutoRefreshItems() {
+        return Networks.getInstance().getConfig().getBoolean("auto-refresh-items", true);
+    }
+
+    public boolean isAutoRefreshSkulls() {
+        return Networks.getInstance().getConfig().getBoolean("auto-refresh-skulls", true);
+    }
+
+    public boolean isAutoRefreshBlueprints() {
+        return Networks.getInstance().getConfig().getBoolean("auto-refresh-blueprints", true);
+    }
+
     public boolean isDebug() {
         return Networks.getInstance().getConfig().getBoolean("debug", false);
     }

@@ -287,6 +287,11 @@ public abstract class NetworkDirectional extends NetworkObject {
             ItemStackUtil.refreshOutdatedSkulls(blockMenu, getItemSlots());
             ItemStackUtil.refreshOutdatedSkulls(blockMenu, getInputSlots());
             ItemStackUtil.refreshOutdatedSkulls(blockMenu, getOutputSlots());
+            // Refresh items whose display name, lore or custom model data no longer match the
+            // registered version
+            ItemStackUtil.refreshOutdatedItems(blockMenu, getItemSlots());
+            ItemStackUtil.refreshOutdatedItems(blockMenu, getInputSlots());
+            ItemStackUtil.refreshOutdatedItems(blockMenu, getOutputSlots());
         }
     }
 

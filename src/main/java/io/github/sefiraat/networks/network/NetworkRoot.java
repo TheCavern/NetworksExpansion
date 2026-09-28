@@ -13,6 +13,7 @@ import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import com.ytdd9527.networksexpansion.implementation.machines.networks.advanced.AdvancedGreedyBlock;
 import com.ytdd9527.networksexpansion.implementation.machines.unit.NetworksDrawer;
+import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
 import io.github.mooy1.infinityexpansion.items.storage.StorageCache;
 import io.github.mooy1.infinityexpansion.items.storage.StorageUnit;
 import io.github.sefiraat.networks.Networks;
@@ -1017,7 +1018,7 @@ public class NetworkRoot extends NetworkNode {
             if (request.getAmount() <= preserveAmount) {
                 stackToReturn.setAmount(stackToReturn.getAmount() + request.getAmount());
                 fetched.setAmount(fetched.getAmount() - request.getAmount());
-                return stackToReturn;
+                return refreshOutdated(stackToReturn);
             } else {
                 stackToReturn.setAmount(stackToReturn.getAmount() + preserveAmount);
                 request.receiveAmount(preserveAmount);
@@ -1037,7 +1038,7 @@ public class NetworkRoot extends NetworkNode {
                 request.receiveAmount(take.getAmount());
 
                 if (request.getAmount() <= 0) {
-                    return stackToReturn;
+                    return refreshOutdated(stackToReturn);
                 }
             }
         }
@@ -1065,7 +1066,7 @@ public class NetworkRoot extends NetworkNode {
                     // We can't take more than this stack. Level to request amount, remove items and then return
                     stackToReturn.setAmount(stackToReturn.getAmount() + request.getAmount());
                     itemStack.setAmount(itemStack.getAmount() - request.getAmount());
-                    return stackToReturn;
+                    return refreshOutdated(stackToReturn);
                 } else {
                     // We can take more than what is here, consume before trying to take more
                     stackToReturn.setAmount(stackToReturn.getAmount() + itemStack.getAmount());
@@ -1095,7 +1096,7 @@ public class NetworkRoot extends NetworkNode {
                 if (request.getAmount() <= itemStack.getAmount()) {
                     stackToReturn.setAmount(stackToReturn.getAmount() + request.getAmount());
                     itemStack.setAmount(itemStack.getAmount() - request.getAmount());
-                    return stackToReturn;
+                    return refreshOutdated(stackToReturn);
                 } else {
                     stackToReturn.setAmount(stackToReturn.getAmount() + itemStack.getAmount());
                     request.receiveAmount(itemStack.getAmount());
@@ -1123,7 +1124,7 @@ public class NetworkRoot extends NetworkNode {
                 if (request.getAmount() <= itemStack.getAmount()) {
                     stackToReturn.setAmount(stackToReturn.getAmount() + request.getAmount());
                     itemStack.setAmount(itemStack.getAmount() - request.getAmount());
-                    return stackToReturn;
+                    return refreshOutdated(stackToReturn);
                 } else {
                     stackToReturn.setAmount(stackToReturn.getAmount() + itemStack.getAmount());
                     request.receiveAmount(itemStack.getAmount());
@@ -1155,7 +1156,7 @@ public class NetworkRoot extends NetworkNode {
                 // We can't take more than this stack. Level to request amount, remove items and then return
                 stackToReturn.setAmount(stackToReturn.getAmount() + request.getAmount());
                 itemStack.setAmount(itemStack.getAmount() - request.getAmount());
-                return stackToReturn;
+                return refreshOutdated(stackToReturn);
             } else {
                 // We can take more than what is here, consume before trying to take more
                 stackToReturn.setAmount(stackToReturn.getAmount() + itemStack.getAmount());
@@ -1168,7 +1169,7 @@ public class NetworkRoot extends NetworkNode {
             return null;
         }
 
-        return stackToReturn;
+        return refreshOutdated(stackToReturn);
     }
 
     public boolean contains(@NotNull ItemStack itemStack) {
@@ -1975,6 +1976,15 @@ public class NetworkRoot extends NetworkNode {
         }
     }
 
+    @Nullable
+    private static ItemStack refreshOutdated(@Nullable ItemStack itemStack) {
+        if (itemStack == null) {
+            return null;
+        }
+        final ItemStack refreshed = ItemStackUtil.refreshOutdatedItem(itemStack);
+        return refreshed == null ? itemStack : refreshed;
+    }
+
     public ItemStack getItemStack0(@NotNull Location accessor, @NotNull ItemRequest request) {
         ItemStack stackToReturn = null;
 
@@ -2038,7 +2048,7 @@ public class NetworkRoot extends NetworkNode {
                         // Netex - Record start
                         tryRecord(accessor, request);
                         // Netex - Record end
-                        return stackToReturn;
+                        return refreshOutdated(stackToReturn);
                     } else {
                         stackToReturn.setAmount(stackToReturn.getAmount() + preserveAmount);
                         request.receiveAmount(preserveAmount);
@@ -2070,7 +2080,7 @@ public class NetworkRoot extends NetworkNode {
                                 // Netex - Record start
                                 tryRecord(accessor, request);
                                 // Netex - Record end
-                                return stackToReturn;
+                                return refreshOutdated(stackToReturn);
                             }
                         } else {
                             // Netex - Cache start
@@ -2131,7 +2141,7 @@ public class NetworkRoot extends NetworkNode {
                 // Netex - Record start
                 tryRecord(accessor, request);
                 // Netex - Record end
-                return stackToReturn;
+                return refreshOutdated(stackToReturn);
             } else {
                 stackToReturn.setAmount(stackToReturn.getAmount() + preserveAmount);
                 request.receiveAmount(preserveAmount);
@@ -2162,7 +2172,7 @@ public class NetworkRoot extends NetworkNode {
                     // Netex - Record start
                     tryRecord(accessor, request);
                     // Netex - Record end
-                    return stackToReturn;
+                    return refreshOutdated(stackToReturn);
                 }
             }
             // </editor-fold>
@@ -2197,7 +2207,7 @@ public class NetworkRoot extends NetworkNode {
                     // Netex - Record start
                     tryRecord(accessor, request);
                     // Netex - Record end
-                    return stackToReturn;
+                    return refreshOutdated(stackToReturn);
                 } else {
                     // We can take more than what is here, consume before trying to take more
                     stackToReturn.setAmount(stackToReturn.getAmount() + itemStack.getAmount());
@@ -2233,7 +2243,7 @@ public class NetworkRoot extends NetworkNode {
                     // Netex - Record start
                     tryRecord(accessor, request);
                     // Netex - Record end
-                    return stackToReturn;
+                    return refreshOutdated(stackToReturn);
                 } else {
                     stackToReturn.setAmount(stackToReturn.getAmount() + itemStack.getAmount());
                     request.receiveAmount(itemStack.getAmount());
@@ -2267,7 +2277,7 @@ public class NetworkRoot extends NetworkNode {
                     // Netex - Record start
                     tryRecord(accessor, request);
                     // Netex - Record end
-                    return stackToReturn;
+                    return refreshOutdated(stackToReturn);
                 } else {
                     stackToReturn.setAmount(stackToReturn.getAmount() + itemStack.getAmount());
                     request.receiveAmount(itemStack.getAmount());
@@ -2305,7 +2315,7 @@ public class NetworkRoot extends NetworkNode {
                 // Netex - Record start
                 tryRecord(accessor, request);
                 // Netex - Record end
-                return stackToReturn;
+                return refreshOutdated(stackToReturn);
             } else {
                 // We can take more than what is here, consume before trying to take more
                 stackToReturn.setAmount(stackToReturn.getAmount() + itemStack.getAmount());
@@ -2326,7 +2336,7 @@ public class NetworkRoot extends NetworkNode {
         tryRecord(accessor, request);
         // Netex - Record end
 
-        return stackToReturn;
+        return refreshOutdated(stackToReturn);
     }
 
     public void addItem(@NotNull Location accessor, @NotNull ItemStack incoming) {

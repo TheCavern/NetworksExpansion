@@ -1310,13 +1310,13 @@ public class ExpansionRecipes {
 
     public static final ItemStack[] CARGO_STORAGE_UNIT_5 = new ItemStack[]{
         NETWORK_QUANTUM_STORAGE_2.getItem(),
-        SlimefunItems.NETHER_ICE,
+        SlimefunItems.BOOSTED_URANIUM,
         NETWORK_QUANTUM_STORAGE_2.getItem(),
-        SlimefunItems.NETHER_ICE,
+        SlimefunItems.BOOSTED_URANIUM,
         ExpansionItemStacks.CARGO_STORAGE_UNIT_4,
-        SlimefunItems.NETHER_ICE,
+        SlimefunItems.BOOSTED_URANIUM,
         NETWORK_QUANTUM_STORAGE_2.getItem(),
-        SlimefunItems.NETHER_ICE,
+        SlimefunItems.BOOSTED_URANIUM,
         NETWORK_QUANTUM_STORAGE_2.getItem()
     };
 
