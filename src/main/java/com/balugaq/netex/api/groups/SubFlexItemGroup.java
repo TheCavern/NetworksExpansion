@@ -1,5 +1,6 @@
 package com.balugaq.netex.api.groups;
 
+import com.balugaq.jeg.utils.clickhandler.OnDisplay;
 import com.balugaq.netex.utils.GuideUtil;
 import com.balugaq.netex.utils.Lang;
 import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
@@ -232,61 +233,66 @@ public class SubFlexItemGroup extends FlexItemGroup {
                 List<SlimefunItem> slimefunItemList = this.slimefunItemList.get(index);
                 for (int j = 0; j < slimefunItemList.size(); j++) {
                     SlimefunItem slimefunItem = slimefunItemList.get(j);
-                    Research research = slimefunItem.getResearch();
-                    if (playerProfile.hasUnlocked(research)) {
-                        ItemStack itemStack = ItemStackUtil.cloneWithoutNBT(slimefunItem.getItem());
-                        ItemStackUtil.addLoreToFirst(itemStack, "§7" + slimefunItem.getId());
-                        chestMenu.addItem(MAIN_CONTENT_L[i][j], ItemStackUtil.getCleanItem(itemStack));
-                        chestMenu.addMenuClickHandler(MAIN_CONTENT_L[i][j], (p, slot, item, action) -> {
-                            RecipeItemGroup recipeItemGroup = RecipeItemGroup.getByItemStack(
-                                player, playerProfile, slimefunGuideMode, slimefunItem.getItem());
-                            if (recipeItemGroup != null) {
-                                Bukkit.getScheduler()
-                                    .runTask(
-                                        JAVA_PLUGIN,
-                                        () -> recipeItemGroup.open(player, playerProfile, slimefunGuideMode));
-                            }
-                            return false;
-                        });
+                    if (Networks.getSupportedPluginManager().isJustEnoughGuide()) {
+                        OnDisplay.Item.display(player, slimefunItem, OnDisplay.Item.Normal, com.balugaq.jeg.utils.GuideUtil.getGuide(player, slimefunGuideMode))
+                            .at(chestMenu, MAIN_CONTENT_L[i][j], page);
                     } else {
-                        ItemStack icon = ItemStackUtil.cloneItem(ChestMenuUtils.getNotResearchedItem());
-                        ItemStackUtil.setLore(
-                            icon,
-                            "§7" + (research == null ? "" : research.getName(player)),
-                            "§4§l" + Slimefun.getLocalization().getMessage(player, "guide.locked"),
-                            "",
-                            Lang.getString("messages.guide.click-to-research"),
-                            "",
-                            Lang.getString("messages.guide.cost")
-                                + (research == null ? 0 : research.getCost())
-                                + Lang.getString("messages.guide.cost-level"));
-                        chestMenu.addItem(MAIN_CONTENT_L[i][j], ItemStackUtil.getCleanItem(icon));
-                        chestMenu.addMenuClickHandler(MAIN_CONTENT_L[i][j], (p, slot, item, action) -> {
-                            if (research != null) {
-                                PlayerPreResearchEvent event =
-                                    new PlayerPreResearchEvent(player, research, slimefunItem);
-                                Bukkit.getPluginManager().callEvent(event);
-
-                                if (!event.isCancelled() && !playerProfile.hasUnlocked(research)) {
-                                    if (research.canUnlock(player)) {
-                                        Slimefun.getRegistry()
-                                            .getSlimefunGuide(SlimefunGuideMode.SURVIVAL_MODE)
-                                            .unlockItem(
-                                                player,
-                                                slimefunItem,
-                                                player1 ->
-                                                    this.refresh(player, playerProfile, slimefunGuideMode));
-                                    } else {
-                                        this.refresh(player, playerProfile, slimefunGuideMode);
-                                        Slimefun.getLocalization().sendMessage(player, "messages.not-enough-xp", true);
-                                    }
-                                } else {
-                                    GuideUtil.removeLastEntry(playerProfile.getGuideHistory());
-                                    this.open(player, playerProfile, slimefunGuideMode);
+                        Research research = slimefunItem.getResearch();
+                        if (playerProfile.hasUnlocked(research)) {
+                            ItemStack itemStack = ItemStackUtil.cloneWithoutNBT(slimefunItem.getItem());
+                            ItemStackUtil.addLoreToFirst(itemStack, "§7" + slimefunItem.getId());
+                            chestMenu.addItem(MAIN_CONTENT_L[i][j], ItemStackUtil.getCleanItem(itemStack));
+                            chestMenu.addMenuClickHandler(MAIN_CONTENT_L[i][j], (p, slot, item, action) -> {
+                                RecipeItemGroup recipeItemGroup = RecipeItemGroup.getByItemStack(
+                                    player, playerProfile, slimefunGuideMode, slimefunItem.getItem());
+                                if (recipeItemGroup != null) {
+                                    Bukkit.getScheduler()
+                                        .runTask(
+                                            JAVA_PLUGIN,
+                                            () -> recipeItemGroup.open(player, playerProfile, slimefunGuideMode));
                                 }
-                            }
-                            return false;
-                        });
+                                return false;
+                            });
+                        } else {
+                            ItemStack icon = ItemStackUtil.cloneItem(ChestMenuUtils.getNotResearchedItem());
+                            ItemStackUtil.setLore(
+                                icon,
+                                "§7" + (research == null ? "" : research.getName(player)),
+                                "§4§l" + Slimefun.getLocalization().getMessage(player, "guide.locked"),
+                                "",
+                                Lang.getString("messages.guide.click-to-research"),
+                                "",
+                                Lang.getString("messages.guide.cost")
+                                    + (research == null ? 0 : research.getCost())
+                                    + Lang.getString("messages.guide.cost-level"));
+                            chestMenu.addItem(MAIN_CONTENT_L[i][j], ItemStackUtil.getCleanItem(icon));
+                            chestMenu.addMenuClickHandler(MAIN_CONTENT_L[i][j], (p, slot, item, action) -> {
+                                if (research != null) {
+                                    PlayerPreResearchEvent event =
+                                        new PlayerPreResearchEvent(player, research, slimefunItem);
+                                    Bukkit.getPluginManager().callEvent(event);
+
+                                    if (!event.isCancelled() && !playerProfile.hasUnlocked(research)) {
+                                        if (research.canUnlock(player)) {
+                                            Slimefun.getRegistry()
+                                                .getSlimefunGuide(SlimefunGuideMode.SURVIVAL_MODE)
+                                                .unlockItem(
+                                                    player,
+                                                    slimefunItem,
+                                                    player1 ->
+                                                        this.refresh(player, playerProfile, slimefunGuideMode));
+                                        } else {
+                                            this.refresh(player, playerProfile, slimefunGuideMode);
+                                            Slimefun.getLocalization().sendMessage(player, "messages.not-enough-xp", true);
+                                        }
+                                    } else {
+                                        GuideUtil.removeLastEntry(playerProfile.getGuideHistory());
+                                        this.open(player, playerProfile, slimefunGuideMode);
+                                    }
+                                }
+                                return false;
+                            });
+                        }
                     }
                 }
             }

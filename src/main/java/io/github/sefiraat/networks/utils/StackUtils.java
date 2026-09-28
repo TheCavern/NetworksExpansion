@@ -1,11 +1,16 @@
 package io.github.sefiraat.networks.utils;
 
 import com.balugaq.netex.api.enums.MinecraftVersion;
+import com.balugaq.netex.utils.DataComponentsCache;
+import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
 import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.network.stackcaches.ItemStackCache;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.data.persistent.PersistentDataAPI;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import lombok.experimental.UtilityClass;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.entity.LivingEntity;
@@ -40,6 +45,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -50,6 +56,8 @@ public class StackUtils {
     private static final MinecraftVersion MC_VERSION = Networks.getInstance().getMCVersion();
     public static final boolean IS_1_20_5 = MC_VERSION.isAtLeast(MinecraftVersion.V1_20_5);
     public static final boolean IS_1_21 = MC_VERSION.isAtLeast(MinecraftVersion.V1_21);
+    public static final boolean IS_1_21_3 = MC_VERSION.isAtLeast(MinecraftVersion.V1_21_3);
+    public static final boolean IS_1_21_4 = MC_VERSION.isAtLeast(MinecraftVersion.V1_21_4);
 
     @NotNull
     public static ItemStack getAsQuantity(@Nullable ItemStack itemStack, int amount) {
@@ -148,6 +156,7 @@ public class StackUtils {
             return false;
         }
 
+        // Don't handle them, ensure no one could be transferred by networks
         if (isBlacklisted(itemStack) || isBlacklisted(cache.getItemStack())) {
             return false;
         }
@@ -155,6 +164,13 @@ public class StackUtils {
         if (Networks.getConfigManager().useBukkitItemComparison()) {
             return itemStack.isSimilar(cache.getItemStack());
         }
+
+        // Use DataComponent API
+        if (IS_1_21_4) {
+            return itemsMatchModern(ItemStackUtil.asCraftItemStack(cache.getItemStack()), ItemStackUtil.asCraftItemStack(itemStack), checkLore, checkCustomModelId);
+        }
+
+        // below 1.21.4
 
         // If either item does not have a meta then either a mismatch or both without meta = vanilla
         if (!itemStack.hasItemMeta() || !cache.getItemStack().hasItemMeta()) {
@@ -269,18 +285,9 @@ public class StackUtils {
         }
 
         // Check the lore
-        if (checkLore
-            || FORCE_CHECK_LORE
-            || itemStack.getMaxStackSize() == 1 // Fix RPG weapons
-            || itemStack.getType()
-            == Material.PLAYER_HEAD // Fix Soul jars in SoulJars & Number Components in MomoTech
-            // & Backpacks-like items in Slimefun & DynaTech & MerakTech & TsingshanTechnology
-            || itemStack.getType() == Material.SPAWNER // Fix Reinforced Spawner in Slimefun4
-            || itemStack.getType() == Material.SUGAR // Fix Symbols in MomoTech
-            || itemStack.getType() == Material.MINECART // Fix Dolly(possible) in FluffyMachines
-            || itemStack.getType() == Material.CHEST_MINECART // Fix Packed Dolly(possible) in FluffyMachines
-        ) {
+        if (shouldCompareLore(itemStack, checkLore) || shouldCompareLore(cache.getItemStack(), checkLore)) {
             if (itemMeta.hasLore() && cachedMeta.hasLore()) {
+                // Bukkit automatically handled unset style in lore, so it always downs to correct results.
                 if (!Objects.equals(itemMeta.getLore(), cachedMeta.getLore())) {
                     return false;
                 }
@@ -314,6 +321,54 @@ public class StackUtils {
         return !itemMeta.hasDisplayName() || Objects.equals(itemMeta.getDisplayName(), cachedMeta.getDisplayName());
 
         // Everything should match if we've managed to get here
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    private static boolean itemsMatchModern(
+        @NotNull ItemStack cacheItem,
+        @NotNull ItemStack itemStack,
+        boolean checkLore,
+        boolean checkCustomModelId) {
+        // most case pdc and others are enough
+        if (!cacheItem.matchesWithoutData(itemStack, checkCustomModelId ? DataComponentsCache.EXCLUDE_LORE : DataComponentsCache.EXCLUDE_LORE_AND_CMD, true)) {
+            return false;
+        }
+
+        if (shouldCompareLore(itemStack, checkLore) || shouldCompareLore(cacheItem, checkLore)) {
+            // we have to check lore manually, otherwise `matchesWithoutData` cannot identify non-style-preset text.
+            // of course, we can use CraftBukkit utils like `ItemMeta.getLore()`, but it needs reflection.
+            return loreMatchesLoose(
+                cacheItem.getData(DataComponentTypes.LORE).styledLines(),
+                itemStack.getData(DataComponentTypes.LORE).styledLines());
+        }
+
+        return true;
+    }
+
+    /**
+     * Compare plain text (no style) only,
+     * Fix #436
+     */
+    private static boolean loreMatchesLoose(List<Component> a1, List<Component> a2) {
+        if (a1.size() != a2.size()) return false;
+        var serializer = PlainTextComponentSerializer.plainText();
+        for (int i = 0; i < a1.size(); i++) {
+            if (!serializer.serialize(a1.get(i)).equals(serializer.serialize(a2.get(i)))) return false;
+        }
+        return true;
+    }
+
+    private static boolean shouldCompareLore(@NotNull ItemStack itemStack, boolean checkLore) {
+        return checkLore
+            || FORCE_CHECK_LORE
+            || itemStack.getMaxStackSize() == 1 // Fix RPG weapons
+            || itemStack.getType()
+            == Material.PLAYER_HEAD // Fix Soul jars in SoulJars & Number Components in MomoTech
+            // & Backpacks-like items in Slimefun & DynaTech & MerakTech & TsingshanTechnology
+            || itemStack.getType() == Material.SPAWNER // Fix Reinforced Spawner in Slimefun4
+            || itemStack.getType() == Material.SUGAR // Fix Symbols in MomoTech
+            || itemStack.getType() == Material.MINECART // Fix Dolly(possible) in FluffyMachines
+            || itemStack.getType() == Material.CHEST_MINECART; // Fix Packed Dolly(possible) in FluffyMachines
     }
 
     @SuppressWarnings("removal")
@@ -677,6 +732,27 @@ public class StackUtils {
         return itemStack.getType() == Material.AIR
             || itemStack.getType().getMaxDurability() < 0
             || Tag.SHULKER_BOXES.isTagged(itemStack.getType())
-            || itemStack.getType() == Material.BUNDLE;
+            || isBundle(itemStack.getType());
+    }
+
+    private static boolean isBundle(@NotNull Material material) {
+        return material == Material.BUNDLE
+            || IS_1_21_3 && (
+                material == Material.BLACK_BUNDLE
+            || material == Material.BLUE_BUNDLE
+            || material == Material.BROWN_BUNDLE
+            || material == Material.CYAN_BUNDLE
+            || material == Material.GRAY_BUNDLE
+            || material == Material.GREEN_BUNDLE
+            || material == Material.LIGHT_BLUE_BUNDLE
+            || material == Material.LIGHT_GRAY_BUNDLE
+            || material == Material.LIME_BUNDLE
+            || material == Material.MAGENTA_BUNDLE
+            || material == Material.ORANGE_BUNDLE
+            || material == Material.PINK_BUNDLE
+            || material == Material.PURPLE_BUNDLE
+            || material == Material.RED_BUNDLE
+            || material == Material.WHITE_BUNDLE
+            || material == Material.YELLOW_BUNDLE);
     }
 }

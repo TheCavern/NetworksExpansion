@@ -135,6 +135,10 @@ public class LocalizationService {
         p.spigot().sendMessage(ChatMessageType.ACTION_BAR, components);
     }
 
+    public final void addDefaultLanguage(@NotNull String langFilename) {
+        addLanguage(langFilename);
+    }
+
     public final void addLanguage(@NotNull String langFilename) {
         Preconditions.checkArgument(langFilename != null, "The language file name should not be null");
         File langFile = new File(this.langFolder, langFilename + ".yml");
@@ -143,9 +147,7 @@ public class LocalizationService {
             try {
                 this.plugin.saveResource(resourcePath, false);
             } catch (IllegalArgumentException var6) {
-                this.plugin
-                    .getLogger()
-                    .log(Level.SEVERE, "The default language file {0} does not exist in jar file!", resourcePath);
+                this.plugin.getLogger().log(Level.SEVERE, "The language file {0} does not exist in jar file!", resourcePath);
                 return;
             }
         }
@@ -153,8 +155,8 @@ public class LocalizationService {
         this.languages.add(langFilename);
         InputStream resource = this.plugin.getResource(resourcePath);
         if (resource == null) {
-            throw new IllegalArgumentException(
-                "The default language file " + resourcePath + " does not exist in jar file!");
+            this.plugin.getLogger().log(Level.SEVERE, "The language file " + resourcePath + " does not exist in jar file!");
+            return;
         }
         InputStreamReader defaultReader = new InputStreamReader(resource, StandardCharsets.UTF_8);
         FileConfiguration defaultConfig = YamlConfiguration.loadConfiguration(defaultReader);
@@ -355,7 +357,7 @@ public class LocalizationService {
         }
 
         if (str.startsWith("<color_random_string>")) {
-            str = str.replaceAll("<color_random_string>", "");
+            str = str.replace("<color_random_string>", "");
             str = TextUtil.colorRandomString(str);
         }
 
@@ -408,12 +410,5 @@ public class LocalizationService {
     @ParametersAreNonnullByDefault
     public ItemStack getMechanism(String key) {
         return getIcon("mechanism." + key, Material.BOOK);
-    }
-
-    @Deprecated
-    @NotNull
-    @ParametersAreNonnullByDefault
-    public String getMCMessage(String key) {
-        return getString("mc_messages." + key);
     }
 }

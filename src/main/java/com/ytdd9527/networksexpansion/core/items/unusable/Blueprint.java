@@ -2,7 +2,6 @@ package com.ytdd9527.networksexpansion.core.items.unusable;
 
 import com.balugaq.netex.api.interfaces.CraftTyped;
 import com.balugaq.netex.utils.Lang;
-import com.ytdd9527.networksexpansion.utils.TextUtil;
 import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
 import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.network.stackcaches.BlueprintInstance;
@@ -26,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class AbstractBlueprint extends UnusableSlimefunItem implements DistinctiveItem, CraftTyped {
-    public AbstractBlueprint(
+public class Blueprint extends UnusableSlimefunItem implements DistinctiveItem, CraftTyped {
+    public Blueprint(
         @NotNull ItemGroup itemGroup,
         @NotNull SlimefunItemStack item,
         @NotNull RecipeType recipeType,

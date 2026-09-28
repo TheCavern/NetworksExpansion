@@ -9,9 +9,9 @@ import com.balugaq.netex.utils.Lang;
 import com.balugaq.netex.utils.LocationUtil;
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
-import com.ytdd9527.networksexpansion.core.items.machines.AbstractAdvancedAutoCrafter;
-import com.ytdd9527.networksexpansion.core.items.machines.AbstractAutoCrafter;
-import com.ytdd9527.networksexpansion.core.items.unusable.AbstractBlueprint;
+import com.ytdd9527.networksexpansion.core.items.machines.AdvancedAutoCrafter;
+import com.ytdd9527.networksexpansion.core.items.machines.AutoCrafter;
+import com.ytdd9527.networksexpansion.core.items.unusable.Blueprint;
 import com.ytdd9527.networksexpansion.implementation.ExpansionItems;
 import com.ytdd9527.networksexpansion.utils.ParticleUtil;
 import com.ytdd9527.networksexpansion.utils.TextUtil;
@@ -25,8 +25,6 @@ import io.github.sefiraat.networks.slimefun.network.NetworkObject;
 import io.github.sefiraat.networks.slimefun.network.grid.GridCache;
 import io.github.sefiraat.networks.utils.Keys;
 import io.github.sefiraat.networks.utils.StackUtils;
-import io.github.sefiraat.networks.utils.datatypes.DataTypeMethods;
-import io.github.sefiraat.networks.utils.datatypes.PersistentCraftingBlueprintType;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
@@ -64,7 +62,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 @SuppressWarnings({"DuplicatedCode"})
 public class CrafterManager extends NetworkObject {
@@ -277,11 +274,11 @@ public class CrafterManager extends NetworkObject {
                         continue;
                     }
                     SlimefunItem sf = SlimefunItem.getById(blockData.getSfId());
-                    ItemStack existing = crafterMenu.getItemInSlot(AbstractAutoCrafter.BLUEPRINT_SLOT);
-                    if (sf instanceof AbstractAutoCrafter && (existing == null || existing.getType() == Material.AIR)) {
+                    ItemStack existing = crafterMenu.getItemInSlot(AutoCrafter.BLUEPRINT_SLOT);
+                    if (sf instanceof AutoCrafter && (existing == null || existing.getType() == Material.AIR)) {
                         tryInsertBlueprint(crafterMenu, blueprint, 1);
                         return;
-                    } else if (sf instanceof AbstractAdvancedAutoCrafter
+                    } else if (sf instanceof AdvancedAutoCrafter
                         && (existing == null
                         || existing.getType() == Material.AIR
                         || (existing.getAmount() < output.getMaxStackSize() / output.getAmount() && StackUtils.itemsMatch(existing, blueprint)))) {
@@ -308,9 +305,9 @@ public class CrafterManager extends NetworkObject {
             }
 
             SlimefunItem sf = SlimefunItem.getById(blockData.getSfId());
-            if (sf instanceof AbstractAutoCrafter) {
+            if (sf instanceof AutoCrafter) {
                 tryInsertBlueprint(crafterMenu, blueprint, 1);
-            } else if (sf instanceof AbstractAdvancedAutoCrafter) {
+            } else if (sf instanceof AdvancedAutoCrafter) {
                 final ItemMeta blueprintMeta = blueprint.getItemMeta();
                 BlueprintInstance instance2 = Keys.getBlueprintInstance(blueprintMeta);
 
@@ -332,11 +329,11 @@ public class CrafterManager extends NetworkObject {
     }
 
     public void tryInsertBlueprint(@NotNull BlockMenu crafterMenu, @NotNull ItemStack blueprint, int maxAmount) {
-        ItemStack existingBlueprint = crafterMenu.getItemInSlot(AbstractAutoCrafter.BLUEPRINT_SLOT);
+        ItemStack existingBlueprint = crafterMenu.getItemInSlot(AutoCrafter.BLUEPRINT_SLOT);
         int v;
         if (existingBlueprint == null || existingBlueprint.getType() == Material.AIR) {
             v = Math.min(maxAmount, blueprint.getAmount());
-            crafterMenu.replaceExistingItem(AbstractAutoCrafter.BLUEPRINT_SLOT, StackUtils.getAsQuantity(blueprint, v));
+            crafterMenu.replaceExistingItem(AutoCrafter.BLUEPRINT_SLOT, StackUtils.getAsQuantity(blueprint, v));
         } else {
             v = Math.max(
                 0,
@@ -414,7 +411,7 @@ public class CrafterManager extends NetworkObject {
                 Location crafterLocation = data.location();
                 BlockMenu menu = StorageCacheUtils.getMenu(crafterLocation);
                 if (menu != null) {
-                    ItemStack blueprint = menu.getItemInSlot(AbstractAutoCrafter.BLUEPRINT_SLOT);
+                    ItemStack blueprint = menu.getItemInSlot(AutoCrafter.BLUEPRINT_SLOT);
                     if (blueprint != null && blueprint.getType() != Material.AIR && SlimefunItem.getByItem(blueprint) instanceof CraftTyped craftTyped) {
                         if (!suitable(data, blueprint)) {
                             displayStack = generateUnsuitableStack(data.craftType(), craftTyped.craftType());
@@ -624,12 +621,12 @@ public class CrafterManager extends NetworkObject {
 
     public void swapItem(@NotNull BlockMenu crafterMenu, @NotNull Player player) {
         ItemStack cursor = player.getItemOnCursor();
-        ItemStack existing = crafterMenu.getItemInSlot(AbstractAutoCrafter.BLUEPRINT_SLOT);
+        ItemStack existing = crafterMenu.getItemInSlot(AutoCrafter.BLUEPRINT_SLOT);
         existing = existing == null ? null : existing.clone();
-        crafterMenu.replaceExistingItem(AbstractAutoCrafter.BLUEPRINT_SLOT, cursor);
+        crafterMenu.replaceExistingItem(AutoCrafter.BLUEPRINT_SLOT, cursor);
         player.setItemOnCursor(existing);
 
-        AbstractAutoCrafter.updateCache(crafterMenu);
+        AutoCrafter.updateCache(crafterMenu);
     }
 
     public void setCrafterName(
@@ -672,7 +669,7 @@ public class CrafterManager extends NetworkObject {
         }
 
         CrafterMetaData data = CrafterMetaData.getMetaData(root, crafterMenu);
-        ItemStack blueprint = crafterMenu.getItemInSlot(AbstractAutoCrafter.BLUEPRINT_SLOT);
+        ItemStack blueprint = crafterMenu.getItemInSlot(AutoCrafter.BLUEPRINT_SLOT);
         ItemStack cursor = player.getItemOnCursor();
 
         if (dropAction) {
@@ -685,7 +682,7 @@ public class CrafterManager extends NetworkObject {
                 topOrUntopCrafter(player, crafterLocation);
             } else {
                 if (blueprint == null) {
-                    if (SlimefunItem.getByItem(cursor) instanceof AbstractBlueprint) {
+                    if (SlimefunItem.getByItem(cursor) instanceof Blueprint) {
                         swapItem(crafterMenu, player);
                     }
                 } else {
@@ -734,12 +731,12 @@ public class CrafterManager extends NetworkObject {
                 craftType = craftTyped.craftType();
             }
 
-            ItemStack blueprint = crafterMenu.getItemInSlot(AbstractAutoCrafter.BLUEPRINT_SLOT);
+            ItemStack blueprint = crafterMenu.getItemInSlot(AutoCrafter.BLUEPRINT_SLOT);
             if (blueprint == null || blueprint.getType() == Material.AIR) {
                 return new CrafterMetaData(location, null, 0, false, craftType);
             }
 
-            BlueprintInstance instance = AbstractAutoCrafter.INSTANCE_MAP.get(crafterMenu.getLocation());
+            BlueprintInstance instance = AutoCrafter.INSTANCE_MAP.get(crafterMenu.getLocation());
 
             if (instance == null) {
                 final ItemMeta blueprintMeta = blueprint.getItemMeta();
@@ -748,7 +745,7 @@ public class CrafterManager extends NetworkObject {
 
             if (instance != null) {
                 SlimefunItem sf = StorageCacheUtils.getSfItem(location);
-                if (sf instanceof AbstractAdvancedAutoCrafter) {
+                if (sf instanceof AdvancedAutoCrafter) {
                     return new CrafterMetaData(location, instance, blueprint.getAmount(), true, craftType);
                 } else {
                     return new CrafterMetaData(location, instance, 1, false, craftType);

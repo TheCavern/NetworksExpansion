@@ -184,6 +184,12 @@ public class Icon {
     public static final ItemStack ITEM_TARGET_DESC_STACK =
         Lang.getIcon("item-target-desc-stack", Material.ORANGE_STAINED_GLASS_PANE);
 
+    public static final ItemStack LINKER_TYPE_HYPER_LINK =
+        Lang.getIcon("linker-type-hyper-link", Material.NETHER_STAR);
+
+    public static final ItemStack LINKER_TYPE_QUANTUM_LINK =
+        Lang.getIcon("linker-type-quantum-link", Material.NETHER_STAR);
+
     // pages are 1-based
     @SuppressWarnings("deprecation")
     @NotNull

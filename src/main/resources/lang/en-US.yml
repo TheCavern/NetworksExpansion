@@ -726,6 +726,15 @@ icons:
     name: "&6Whitelist Mode"
     lore:
       - "&7Click to switch to blacklist mode"
+  linker-type-hyper-link:
+    lore:
+      - '&aClick to change the link to &d Quantum Entanglement Singularity'
+    name: '&6Link usage: &dHyperlink'
+  linker-type-quantum-link:
+    lore:
+      - 'Click to change the link to a &dHyperlink.'
+    name: '&6Link usage: &dQuantum Entanglement Singularity'
+
   match-mode-all-match:
     name: "&6All Match Mode"
     lore:

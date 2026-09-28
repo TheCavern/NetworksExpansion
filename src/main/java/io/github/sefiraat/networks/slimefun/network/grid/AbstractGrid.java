@@ -109,8 +109,10 @@ public abstract class AbstractGrid extends NetworkObject {
                     addToRegistry(block);
                     tryAddItem(blockMenu);
                     GridCache cache = getCacheMap().get(block.getLocation());
-                    cache.setEntriesCache(null);
-                    updateDisplay(blockMenu);
+                    if (cache != null) {
+                        cache.setEntriesCache(null);
+                        updateDisplay(blockMenu);
+                    }
                 }
             }
 
@@ -282,7 +284,7 @@ public abstract class AbstractGrid extends NetworkObject {
         if (cache.getEntriesCache() != null) {
             return cache.getEntriesCache();
         }
-        var entries = networkRoot.getAllNetworkItemsLongType().entrySet().stream()
+        var entries = networkRoot.getAllNetworkItemsLongTypeView().entrySet().stream()
             .filter(entry -> {
                 if (cache.getFilter() == null) {
                     return true;
@@ -432,9 +434,8 @@ public abstract class AbstractGrid extends NetworkObject {
             return;
         }
 
-        HashMap<Integer, ItemStack> remnant = InventoryUtil.addItem(player, requestingStack);
-        requestingStack = remnant.values().stream().findFirst().orElse(null);
-        if (requestingStack != null) {
+        InventoryUtil.addItem(player, requestingStack);
+        if (requestingStack.getAmount() > 0) {
             definition.getNode().getRoot().addItemStack(requestingStack);
         }
     }
@@ -585,7 +586,7 @@ public abstract class AbstractGrid extends NetworkObject {
         }
     }
 
-    protected static void updateSortOrder(GridCache gridCache, ClickAction action, @Range(from = 1, to = 4) int limit) {
+    public static void updateSortOrder(GridCache gridCache, ClickAction action, @Range(from = 1, to = 4) int limit) {
         if (action.isShiftClicked() && !action.isRightClicked()) {
             gridCache.setSortOrder(GridCache.SortOrder.ALPHABETICAL);
         } else {

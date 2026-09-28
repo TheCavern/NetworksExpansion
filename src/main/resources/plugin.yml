@@ -23,6 +23,7 @@ softdepend:
   - GuguSlimefunLib
   - FinalTECH
   - FinalTECH-Changed
+#  - JustEnoughGuide # Don't add this line, see https://github.com/balugaq/JustEnoughGuide/blob/master/src/main/java/com/balugaq/jeg/implementation/ThirdPartyWarnings.java
 commands:
   networks:
     aliases: networksexpansion
@@ -65,9 +66,6 @@ permissions:
     default: op
   networks.commands.getstorageitem:
     description: Allows you to use the /networks getstorageitem command
-    default: op
-  networks.commands.worldedit.*: # Deprecated
-    description: Allows you to use all Networks WorldEdit commands
     default: op
   networks.commands.map:
     description: Allows you to use the /networks map command

@@ -133,22 +133,7 @@ public abstract class AbstractGridNewStyle extends AbstractGrid implements Keybi
     @Override
     public void addToInventory(
         Player player, NodeDefinition definition, GridItemRequest request, BlockMenu menu) {
-        ItemStack requestingStack = definition.getNode().getRoot().getItemStack0(menu.getLocation(), request);
-
-        if (requestingStack == null) {
-            return;
-        }
-
-        HashMap<Integer, ItemStack> remnant = InventoryUtil.addItem(player, requestingStack);
-        remnant.values().stream().findFirst().ifPresent(r2 -> Bukkit.getScheduler().runTask(
-            Networks.getInstance(), () -> {
-                if (player.getWorld().getNearbyEntities(player.getLocation(), 5, 5, 5).size() > SmartNetworkCraftingGridNewStyle.THRESHOLD) {
-                    player.getWorld().dropItem(player.getLocation(), r2);
-                } else {
-                    definition.getNode().getRoot().addItemStack(r2);
-                }
-            }
-        ));
+        InventoryUtil.give(player, definition.getNode().getRoot().getItemStack0(menu.getLocation(), request));
     }
 
     @Override
@@ -397,6 +382,10 @@ public abstract class AbstractGridNewStyle extends AbstractGrid implements Keybi
 
     @Override
     protected List<Entry<ItemStack, Long>> getEntries(NetworkRoot networkRoot, GridCache cache) {
+        return getEntries0(networkRoot, cache);
+    }
+
+    public static List<Entry<ItemStack, Long>> getEntries0(NetworkRoot networkRoot, GridCache cache) {
         if (cache.getEntriesCache() != null) {
             return cache.getEntriesCache();
         }
@@ -406,7 +395,7 @@ public abstract class AbstractGridNewStyle extends AbstractGrid implements Keybi
             try {
                 Bukkit.getOnlinePlayers().stream().findFirst().ifPresent(player -> {
                     List<SlimefunItem> sfs = new ArrayList<>();
-                    for (ItemStack item : networkRoot.getAllNetworkItemsLongType().keySet()) {
+                    for (ItemStack item : networkRoot.getAllNetworkItemsLongTypeView().keySet()) {
                         if (item != null && item.getType() != Material.AIR) {
                             var sf = SlimefunItem.getByItem(item);
                             if (sf != null) {
@@ -424,7 +413,7 @@ public abstract class AbstractGridNewStyle extends AbstractGrid implements Keybi
             } catch (Exception ignored) {
             }
         }
-        var result = networkRoot.getAllNetworkItemsLongType().entrySet().stream()
+        var result = networkRoot.getAllNetworkItemsLongTypeView().entrySet().stream()
             .filter(entry -> {
                 if (searchTerm == null) {
                     return true;

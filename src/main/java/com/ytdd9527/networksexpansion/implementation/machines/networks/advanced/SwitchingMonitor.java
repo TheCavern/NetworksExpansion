@@ -210,13 +210,19 @@ public class SwitchingMonitor extends NetworkObject implements HangingBlock, Pla
             if (shift) {
                 ItemStack result = root.getItemStack0(attachon, new ItemRequest(template, amount));
                 if (result != null) {
-                    InventoryUtil.addItem(player, result).values().forEach(item -> root.addItemStack0(attachon, item));
+                    InventoryUtil.addItem(player, result);
+                    if (result.getAmount() > 0) {
+                        root.addItemStack0(attachon, result);
+                    }
                 }
             } else {
                 ItemStack result = root.getItemStack0(
                     attachon, new ItemRequest(template, Math.min(amount, template.getMaxStackSize())));
                 if (result != null) {
-                    InventoryUtil.addItem(player, result).values().forEach(item -> root.addItemStack0(attachon, item));
+                    InventoryUtil.addItem(player, result);
+                    if (result.getAmount() > 0) {
+                        root.addItemStack0(attachon, result);
+                    }
                 }
             }
         } else {
@@ -267,7 +273,7 @@ public class SwitchingMonitor extends NetworkObject implements HangingBlock, Pla
 
         template = uniconize(template);
 
-        long amount = root.getAllNetworkItemsLongType().getOrDefault(template, 0L);
+        long amount = root.getAllNetworkItemsLongTypeView().getOrDefault(template, 0L);
         entityBlock.setItem(iconize(template, amount), false);
     }
 

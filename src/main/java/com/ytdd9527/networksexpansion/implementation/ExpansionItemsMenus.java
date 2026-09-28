@@ -99,16 +99,6 @@ public final class ExpansionItemsMenus {
         "NTW_EXPANSION_SUB_MENU_BRIDGE",
         Material.WHITE_STAINED_GLASS,
         Lang.getString("groups.expansion.custom.sub_menu_bridge"));
-    @Deprecated
-    public static final SubFlexItemGroup SUB_MENU_ENCODER = GroupConfigUtil.getSubFlexItemGroup(
-        "NTW_EXPANSION_SUB_MENU_ENCODER",
-        Material.TARGET,
-        Lang.getString("groups.expansion.custom.sub_menu_encoder"));
-    @Deprecated
-    public static final SubFlexItemGroup SUB_MENU_CRAFTER_MACHINE = GroupConfigUtil.getSubFlexItemGroup(
-        "NTW_EXPANSION_SUB_MENU_CRAFTER_MACHINE",
-        Material.CRAFTING_TABLE,
-        Lang.getString("groups.expansion.custom.sub_menu_crafter_machine"));
 
     // trophy
     public static final SubFlexItemGroup MAIN_MENU_TROPHY = GroupConfigUtil.getSubFlexItemGroup(
@@ -124,7 +114,7 @@ public final class ExpansionItemsMenus {
         Material.KNOWLEDGE_BOOK,
         Lang.getString("groups.expansion.custom.sub_menu_announce"));
 
-    // deprecated
+    // deprecated items
     public static final SubFlexItemGroup SUB_MENU_DEPRECATED = GroupConfigUtil.getSubFlexItemGroup(
         "NTW_EXPANSION_SUB_MENU_DEPRECATED",
         Material.DEEPSLATE_BRICKS,

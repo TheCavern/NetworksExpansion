@@ -370,4 +370,15 @@ public class ReflectionUtil {
             default -> clazz;
         };
     }
+
+    @Nullable
+    public static Class<?> getClass(String... classNames) {
+        for (String className : classNames) {
+            try {
+                return Class.forName(className);
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+        return null;
+    }
 }

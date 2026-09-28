@@ -91,7 +91,7 @@ public class NetworkProbe extends SpecialSlimefunItem implements CanCooldown {
             final int storageCardConverters = root.getStorageCardConverters().size();
             final int facingPresetters = root.getFacingPresetters().size();
 
-            final Map<ItemStack, Long> allNetworkItems = root.getAllNetworkItemsLongType();
+            final Map<ItemStack, Long> allNetworkItems = root.getAllNetworkItemsLongTypeView();
             final int distinctItems = allNetworkItems.size();
 
             long totalItems = allNetworkItems.values().stream()

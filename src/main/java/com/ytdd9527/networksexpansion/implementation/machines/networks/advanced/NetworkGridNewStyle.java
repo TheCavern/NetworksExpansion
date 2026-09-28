@@ -21,7 +21,6 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.HashMap;
@@ -53,24 +52,23 @@ public class NetworkGridNewStyle extends AbstractGridNewStyle implements Keybind
     private static final Map<Location, GridCache> CACHE_MAP = new HashMap<>();
 
     public NetworkGridNewStyle(
-        @NotNull ItemGroup itemGroup,
-        @NotNull SlimefunItemStack item,
-        @NotNull RecipeType recipeType,
-        ItemStack @NotNull [] recipe) {
+        ItemGroup itemGroup,
+        SlimefunItemStack item,
+        RecipeType recipeType,
+        ItemStack[] recipe) {
         super(itemGroup, item, recipeType, recipe);
     }
 
     public NetworkGridNewStyle(
-        @NotNull ItemGroup itemGroup,
-        @NotNull SlimefunItemStack item,
-        @NotNull RecipeType recipeType,
-        ItemStack @NotNull [] recipe,
+        ItemGroup itemGroup,
+        SlimefunItemStack item,
+        RecipeType recipeType,
+        ItemStack[] recipe,
         NodeType nodeType) {
         super(itemGroup, item, recipeType, recipe, nodeType);
     }
 
     @Override
-    @NotNull
     protected BlockMenuPreset getPreset() {
         return new BlockMenuPreset(this.getId(), this.getItemName()) {
 
@@ -82,7 +80,7 @@ public class NetworkGridNewStyle extends AbstractGridNewStyle implements Keybind
             }
 
             @Override
-            public boolean canOpen(@NotNull Block block, @NotNull Player player) {
+            public boolean canOpen(Block block, Player player) {
                 return player.hasPermission("slimefun.inventory.bypass")
                     || (ExpansionItems.NETWORK_GRID_NEW_STYLE.canUse(player, false)
                     && Slimefun.getProtectionManager()
@@ -95,7 +93,7 @@ public class NetworkGridNewStyle extends AbstractGridNewStyle implements Keybind
             }
 
             @Override
-            public void newInstance(@NotNull BlockMenu menu, @NotNull Block b) {
+            public void newInstance(BlockMenu menu, Block b) {
                 getCacheMap().put(menu.getLocation(), new GridCache(0, 0, GridCache.SortOrder.ALPHABETICAL));
 
                 menu.replaceExistingItem(getPagePrevious(), getPagePreviousStack());
@@ -162,7 +160,6 @@ public class NetworkGridNewStyle extends AbstractGridNewStyle implements Keybind
         };
     }
 
-    @NotNull
     public Map<Location, GridCache> getCacheMap() {
         return CACHE_MAP;
     }
@@ -201,7 +198,7 @@ public class NetworkGridNewStyle extends AbstractGridNewStyle implements Keybind
     }
 
     @Override
-    public @NotNull List<Keybinds> keybinds() {
+    public List<Keybinds> keybinds() {
         return List.of(displayKeybinds(), outsideKeybinds());
     }
 }

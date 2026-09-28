@@ -5,6 +5,7 @@ import com.ytdd9527.networksexpansion.implementation.ExpansionItemsMenus;
 import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.slimefun.NetworkSlimefunItems;
 import net.guizhanss.slimefun4.utils.WikiUtils;
+import org.bukkit.Bukkit;
 
 public class SetupUtil {
 
@@ -166,7 +167,6 @@ public class SetupUtil {
             ExpansionItems.NETWORK_BRIDGE_PINK.registerThis());
 
         ExpansionItemsMenus.SUB_MENU_DEPRECATED.addTo(
-            ExpansionItems.WORLDEDIT_AXE.registerThis(),
             ExpansionItems.MAGIC_WORKBENCH_BLUEPRINT.registerThis(),
             ExpansionItems.ARMOR_FORGE_BLUEPRINT.registerThis(),
             ExpansionItems.SMELTERY_BLUEPRINT.registerThis(),
@@ -232,30 +232,23 @@ public class SetupUtil {
             ExpansionItems.ADVANCED_AUTO_GRIND_STONE_WITHHOLDING.registerThis(),
             ExpansionItems.ADVANCED_AUTO_JUICER_WITHHOLDING.registerThis(),
             ExpansionItems.ADVANCED_AUTO_ORE_CRUSHER_WITHHOLDING.registerThis(),
-            ExpansionItems.ADVANCED_AUTO_PRESSURE_CHAMBER_WITHHOLDING.registerThis());
+            ExpansionItems.ADVANCED_AUTO_PRESSURE_CHAMBER_WITHHOLDING.registerThis(),
+            ExpansionItems.BETTER_GRABBER.registerThis());
 
         /* authors */
         ExpansionItemsMenus.SUB_MENU_AUTHOR.addTo(
             ExpansionItems.AUTHOR_SEFIRAAT.registerThis(),
             ExpansionItems.AUTHOR_YBW0014.registerThis(),
             ExpansionItems.AUTHOR_YITOUDAIDAI.registerThis(),
-            ExpansionItems.AUTHOR_TINALNESS.registerThis());
+            ExpansionItems.AUTHOR_BALUGAQ.registerThis());
 
-        /* announce */
+        /* announcements */
         ExpansionItemsMenus.SUB_MENU_ANNOUNCE.addTo(
-            ExpansionItems.NTW_EXPANSION_ANNOUNCE_1.registerThis(),
-            ExpansionItems.NTW_EXPANSION_ANNOUNCE_2.registerThis(),
-            ExpansionItems.NTW_EXPANSION_ANNOUNCE_3.registerThis(),
-            ExpansionItems.NTW_EXPANSION_ANNOUNCE_4.registerThis(),
-            ExpansionItems.NTW_EXPANSION_ANNOUNCE_5.registerThis(),
-            ExpansionItems.NTW_EXPANSION_ANNOUNCE_6.registerThis(),
-            ExpansionItems.NTW_EXPANSION_ANNOUNCE_7.registerThis(),
-            ExpansionItems.NTW_EXPANSION_ANNOUNCE_8.registerThis(),
-            ExpansionItems.NTW_EXPANSION_ANNOUNCE_9.registerThis(),
-            ExpansionItems.NTW_EXPANSION_ANNOUNCE_10.registerThis());
-
-        /* Deprecated */
-        ExpansionItems.BETTER_GRABBER.registerThis(); // Not add to menu because it's deprecated, shit compatibility
+            ExpansionItems.NTW_EXPANSION_ANNOUNCEMENT_01.registerThis(),
+            ExpansionItems.NTW_EXPANSION_ANNOUNCEMENT_02.registerThis(),
+            ExpansionItems.NTW_EXPANSION_ANNOUNCEMENT_03.registerThis(),
+            ExpansionItems.NTW_EXPANSION_ANNOUNCEMENT_04.registerThis(),
+            ExpansionItems.NTW_EXPANSION_ANNOUNCEMENT_05.registerThis());
     }
 
     private static void setupMenu() {
@@ -319,8 +312,10 @@ public class SetupUtil {
 
     public static void setupAll() {
         setupItem();
-        setupMenu();
         setupWiki();
         setupIntegration();
+
+        // wait for logitech integration
+        Bukkit.getScheduler().runTaskLaterAsynchronously(Networks.getInstance(), SetupUtil::setupMenu, 2L);
     }
 }

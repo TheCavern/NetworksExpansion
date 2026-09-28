@@ -1,13 +1,12 @@
 package com.ytdd9527.networksexpansion.core.items.machines;
 
-import com.balugaq.netex.api.enums.CraftType;
 import com.balugaq.netex.api.enums.FeedbackType;
 import com.balugaq.netex.api.helpers.Icon;
 import com.balugaq.netex.api.interfaces.CraftTyped;
 import com.balugaq.netex.api.interfaces.SoftCellBannable;
 import com.balugaq.netex.utils.BlockMenuUtil;
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
-import com.ytdd9527.networksexpansion.core.items.unusable.AbstractBlueprint;
+import com.ytdd9527.networksexpansion.core.items.unusable.Blueprint;
 import io.github.sefiraat.networks.NetworkStorage;
 import io.github.sefiraat.networks.network.NetworkRoot;
 import io.github.sefiraat.networks.network.NodeDefinition;
@@ -17,8 +16,6 @@ import io.github.sefiraat.networks.network.stackcaches.ItemRequest;
 import io.github.sefiraat.networks.slimefun.network.NetworkObject;
 import io.github.sefiraat.networks.utils.Keys;
 import io.github.sefiraat.networks.utils.StackUtils;
-import io.github.sefiraat.networks.utils.datatypes.DataTypeMethods;
-import io.github.sefiraat.networks.utils.datatypes.PersistentCraftingBlueprintType;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
@@ -41,10 +38,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @SuppressWarnings("DuplicatedCode")
-public abstract class AbstractAutoCrafter extends NetworkObject implements SoftCellBannable, CraftTyped {
+public class AutoCrafter extends NetworkObject implements SoftCellBannable, CraftTyped {
     public static final int BLUEPRINT_SLOT = 10;
     public static final int OUTPUT_SLOT = 16;
     public static final Map<Location, BlueprintInstance> INSTANCE_MAP = new HashMap<>();
@@ -54,7 +50,7 @@ public abstract class AbstractAutoCrafter extends NetworkObject implements SoftC
     protected final int chargePerCraft;
     protected final boolean withholding;
 
-    public AbstractAutoCrafter(
+    public AutoCrafter(
         @NotNull ItemGroup itemGroup,
         @NotNull SlimefunItemStack item,
         @NotNull RecipeType recipeType,
@@ -87,7 +83,7 @@ public abstract class AbstractAutoCrafter extends NetworkObject implements SoftC
     }
 
     public static void updateCache(@NotNull BlockMenu blockMenu) {
-        AbstractAutoCrafter.INSTANCE_MAP.remove(blockMenu.getLocation());
+        AutoCrafter.INSTANCE_MAP.remove(blockMenu.getLocation());
     }
 
     protected void craftPreFlight(@NotNull BlockMenu blockMenu) {
@@ -142,7 +138,7 @@ public abstract class AbstractAutoCrafter extends NetworkObject implements SoftC
             return;
         }
 
-        BlueprintInstance instance = AbstractAutoCrafter.INSTANCE_MAP.get(blockMenu.getLocation());
+        BlueprintInstance instance = AutoCrafter.INSTANCE_MAP.get(blockMenu.getLocation());
 
         if (instance == null) {
             final ItemMeta blueprintMeta = blueprint.getItemMeta();
@@ -297,7 +293,7 @@ public abstract class AbstractAutoCrafter extends NetworkObject implements SoftC
 
             @Override
             public int[] getSlotsAccessedByItemTransport(ItemTransportFlow flow) {
-                if (AbstractAutoCrafter.this.withholding && flow == ItemTransportFlow.WITHDRAW) {
+                if (AutoCrafter.this.withholding && flow == ItemTransportFlow.WITHDRAW) {
                     return new int[]{OUTPUT_SLOT};
                 }
                 return new int[0];
@@ -306,7 +302,7 @@ public abstract class AbstractAutoCrafter extends NetworkObject implements SoftC
     }
 
     public boolean isValidBlueprint(SlimefunItem item) {
-        return item instanceof AbstractBlueprint;
+        return item instanceof Blueprint;
     }
 
     public boolean canBlueprintStack() {
