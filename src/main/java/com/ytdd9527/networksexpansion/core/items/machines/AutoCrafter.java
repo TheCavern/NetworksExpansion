@@ -117,7 +117,7 @@ public class AutoCrafter extends NetworkObject implements SoftCellBannable, Craf
             return;
         }
 
-        final ItemStack refreshedBlueprint = AbstractBlueprint.refreshOutdatedBlueprint(blueprint);
+        final ItemStack refreshedBlueprint = Blueprint.refreshOutdatedBlueprint(blueprint);
         if (refreshedBlueprint != null) {
             refreshedBlueprint.setAmount(blueprint.getAmount());
             blockMenu.replaceExistingItem(BLUEPRINT_SLOT, refreshedBlueprint);

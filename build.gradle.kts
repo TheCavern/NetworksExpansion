@@ -77,7 +77,7 @@ dependencies {
     // Supported Plugins
     compileOnly("com.github.SlimefunGuguProject:InfinityExpansion:3c5db3650a")
     compileOnly("com.github.Sefiraat:Netheopoiesis:8d1af6c570")
-    compileOnly("io.github.schntgaispock.slimehud:SlimeHUD:SlimeHUD:indev-Jul.06.2026-1431")
+    compileOnly("io.github.schntgaispock.slimehud:SlimeHUD:indev-Jul.06.2026-1431")
     compileOnly("com.bgsoftware:WildChestsAPI:2026.2")
     compileOnly("com.bgsoftware:WildStackerAPI:2026.2")
     compileOnly("dev.rosewood:rosestacker:1.5.23")
@@ -88,7 +88,7 @@ dependencies {
         exclude("com.comphenix.protocol", "ProtocolLib")
     }
     compileOnly("net.guizhanss:GuizhanLibPlugin:2.5.0-Cavern")
-    compileOnly("com.github.balugaq:FluffyMachines:indev-Jul.06.2026-1252")
+    compileOnly("io.ncbpfluffybear:FluffyMachines:indev-Jul.06.2026-1252")
     compileOnly("com.github.TimetownDev:GuguSlimefunLib:45627c6f8e")
     compileOnly("com.github.balugaq:JustEnoughGuide:7f21e113a2")
     // System-scoped local JARs
@@ -177,31 +177,30 @@ publishing {
 }
 
 tasks.runServer {
-        dependsOn(shadowJar)
-        val run = file(providers.gradleProperty("server.run.dir").orElse("run"))
-        runDirectory.set(run)
+    dependsOn(tasks.named("shadowJar"))
+    val run = file(providers.gradleProperty("server.run.dir").orElse("run"))
+    runDirectory.set(run)
 
-        doFirst {
-            run.resolve("eula.txt").writeText("eula=true")
+    doFirst {
+        run.resolve("eula.txt").writeText("eula=true")
 
-            val pl = run.resolve("plugins")
-            pl.mkdirs()
-            copy {
-                from(projectDir.resolve("build/libs")) {
-                    include("${name}-${version}.jar")
-                }
-                into(pl)
+        val pl = run.resolve("plugins")
+        pl.mkdirs()
+        copy {
+            from(projectDir.resolve("build/libs")) {
+                include("${name}-${version}.jar")
             }
+            into(pl)
         }
+    }
 
-        jvmArgs(
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.jnu.encoding=UTF-8",
-            "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5001",
-            "-Dnet.kyori.adventure.text.warn_when_legacy_formatting_detected=false"
-        )
-        maxHeapSize = "4G"
-        minecraftVersion("1.20.1")
+    jvmArgs("-Dfile.encoding=UTF-8",
+        "-Dsun.jnu.encoding=UTF-8",
+        "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5001",
+        "-Dnet.kyori.adventure.text.warn_when_legacy_formatting_detected=false"
+    )
+    maxHeapSize = "4G"
+    minecraftVersion("1.20.1")
 }
 
 defaultTasks("clean", "build")

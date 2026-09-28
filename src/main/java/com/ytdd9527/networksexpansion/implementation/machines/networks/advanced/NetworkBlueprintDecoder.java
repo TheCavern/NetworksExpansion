@@ -132,7 +132,7 @@ public class NetworkBlueprintDecoder extends NetworkObject {
             return;
         }
 
-        final ItemStack refreshedBlueprint = AbstractBlueprint.refreshOutdatedBlueprint(input);
+        final ItemStack refreshedBlueprint = Blueprint.refreshOutdatedBlueprint(input);
         if (refreshedBlueprint != null) {
             refreshedBlueprint.setAmount(input.getAmount());
             menu.replaceExistingItem(getInputSlot(), refreshedBlueprint);
@@ -154,7 +154,7 @@ public class NetworkBlueprintDecoder extends NetworkObject {
         }
 
         BlueprintInstance blueprintInstance = Keys.getBlueprintInstance(meta);
-        if (blueprintInstance == null) {
+        if (blueprintInstance == null) {    
             player.sendMessage(Lang.getString("messages.unsupported-operation.decoder.invalid_blueprint"));
             sendFeedback(menu.getLocation(), FeedbackType.INVALID_BLUEPRINT);
             return;
