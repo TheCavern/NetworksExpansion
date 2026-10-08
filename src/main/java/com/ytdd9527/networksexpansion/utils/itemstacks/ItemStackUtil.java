@@ -9,6 +9,7 @@ import com.ytdd9527.networksexpansion.utils.TextUtil;
 import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.utils.Keys;
 import io.github.sefiraat.networks.utils.StackUtils;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.nms.ItemNameAdapter;
@@ -30,6 +31,10 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,6 +87,142 @@ public final class ItemStackUtil {
         ItemStack itemStack = item instanceof ItemStackWrapper ? ItemStackUtil.getCleanItem(item) : item.clone();
         itemStack.setAmount(amount);
         return itemStack;
+    }
+
+    private static final @Nullable VarHandle API_ITEM_STACK_CRAFT_DELEGATE_FIELD;
+    static {
+        if (StackUtils.IS_1_21) {
+            try {
+                API_ITEM_STACK_CRAFT_DELEGATE_FIELD = MethodHandles.privateLookupIn(
+                    ItemStack.class,
+                    MethodHandles.lookup()
+                ).findVarHandle(ItemStack.class, "craftDelegate", ItemStack.class);
+            } catch (final IllegalAccessException | NoSuchFieldException exception) {
+                throw new RuntimeException(exception);
+            }
+        } else {
+            API_ITEM_STACK_CRAFT_DELEGATE_FIELD = null;
+        }
+    }
+
+    private static ItemStack getDelegate(ItemStack bukkit) {
+        if (StackUtils.IS_1_21) {
+            return (ItemStack) API_ITEM_STACK_CRAFT_DELEGATE_FIELD.get(bukkit);
+        } else {
+            return bukkit;
+        }
+    }
+
+    public static @NotNull ItemStack asCraftItemStack(@NotNull ItemStack stack) {
+        if (StackUtils.IS_1_21) {
+            if (stack instanceof SlimefunItemStack) {
+                return ItemStackUtil.getCleanItem(stack);
+            }
+            if (stack instanceof ItemStackWrapper) {
+                return ItemStackUtil.getCleanItem(stack);
+            }
+
+            var delegate = getDelegate(stack);
+            if (delegate instanceof SlimefunItemStack) {
+                return ItemStackUtil.getCleanItem(stack);
+            }
+            if (delegate instanceof ItemStackWrapper) {
+                return ItemStackUtil.getCleanItem(stack);
+            }
+        }
+
+        return stack;
+    }
+
+    private static final boolean COMPONENTS_BRIDGE_OK;
+    private static final @Nullable MethodHandle CRAFT_HANDLE_GETTER;
+    private static final @Nullable MethodHandle NMS_GET_COMPONENTS_PATCH;
+    private static final @Nullable MethodHandle NMS_PATCH_IS_EMPTY;
+    private static final @Nullable MethodHandle NMS_HASH_ITEM_AND_COMPONENTS;
+
+    static {
+        boolean ok = false;
+        MethodHandle handleGetter = null;
+        MethodHandle patchGetter = null;
+        MethodHandle patchIsEmpty = null;
+        MethodHandle hashItemAndComponents = null;
+        if (StackUtils.IS_1_20_5) {
+            try {
+                final MethodHandles.Lookup lookup = MethodHandles.lookup();
+                final Class<?> craftClass = Class.forName("org.bukkit.craftbukkit.inventory.CraftItemStack");
+                final Class<?> nmsClass = Class.forName("net.minecraft.world.item.ItemStack");
+                final Class<?> patchClass = Class.forName("net.minecraft.core.component.DataComponentPatch");
+                handleGetter = lookup.findGetter(craftClass, "handle", nmsClass);
+                patchGetter = lookup.findVirtual(nmsClass, "getComponentsPatch", MethodType.methodType(patchClass));
+                patchIsEmpty = lookup.findVirtual(patchClass, "isEmpty", MethodType.methodType(boolean.class));
+                hashItemAndComponents = lookup.findStatic(
+                    nmsClass, "hashItemAndComponents", MethodType.methodType(int.class, nmsClass));
+                ok = true;
+            } catch (final ClassNotFoundException | IllegalAccessException | NoSuchFieldException | NoSuchMethodException exception) {
+                Debug.debug("Components bridge unavailable: NMS reflection lookup failed, hasCustomComponents() falls back to hasItemMeta()");
+                Debug.trace(exception);
+            }
+        }
+        COMPONENTS_BRIDGE_OK = ok;
+        CRAFT_HANDLE_GETTER = handleGetter;
+        NMS_GET_COMPONENTS_PATCH = patchGetter;
+        NMS_PATCH_IS_EMPTY = patchIsEmpty;
+        NMS_HASH_ITEM_AND_COMPONENTS = hashItemAndComponents;
+    }
+
+    public static boolean componentsBridgeAvailable() {
+        return COMPONENTS_BRIDGE_OK;
+    }
+
+    public static boolean hasCustomComponents(@Nullable ItemStack item) {
+        if (item == null) {
+            return false;
+        }
+        if (!COMPONENTS_BRIDGE_OK) {
+            return item.hasItemMeta();
+        }
+        try {
+            final Object nms = nmsHandle(item);
+            if (nms == null) {
+                return item.hasItemMeta();
+            }
+            final Object patch = NMS_GET_COMPONENTS_PATCH.invoke(nms);
+            return !(boolean) NMS_PATCH_IS_EMPTY.invoke(patch);
+        } catch (final Throwable throwable) {
+            Debug.debug(throwable);
+            return item.hasItemMeta();
+        }
+    }
+
+    public static int hashItemComponents(@NotNull ItemStack item) {
+        try {
+            final Object nms = nmsHandle(item);
+            if (nms != null) {
+                return (int) NMS_HASH_ITEM_AND_COMPONENTS.invoke(nms);
+            }
+        } catch (final Throwable throwable) {
+            Debug.debug(throwable);
+        }
+        return item.getType().hashCode();
+    }
+
+    public static @Nullable Object nmsIdentity(@NotNull ItemStack item) {
+        return nmsHandle(item);
+    }
+
+    private static @Nullable Object nmsHandle(@NotNull ItemStack item) {
+        try {
+            ItemStack target = item;
+            if (StackUtils.IS_1_21) {
+                final ItemStack delegate = (ItemStack) API_ITEM_STACK_CRAFT_DELEGATE_FIELD.get(item);
+                if (delegate != null) {
+                    target = delegate;
+                }
+            }
+            return CRAFT_HANDLE_GETTER.invoke(target);
+        } catch (final Throwable throwable) {
+            return null;
+        }
     }
 
     /**
@@ -1241,11 +1382,21 @@ public final class ItemStackUtil {
             ItemStack incoming = toGive.clone();
             incoming.setAmount(Math.min(toGive.getMaxStackSize(), toGive.getAmount()));
             toGive.setAmount(toGive.getAmount() - incoming.getAmount());
-            Collection<ItemStack> leftover = InventoryUtil.addItem(p, incoming).values();
-            for (ItemStack itemStack : leftover) {
-                p.getWorld().dropItemNaturally(p.getLocation(), itemStack);
+            InventoryUtil.addItem(p, incoming);
+            if (incoming.getAmount() > 0) {
+                p.getWorld().dropItemNaturally(p.getLocation(), incoming);
             }
         }
+    }
+
+    /** 光标优先的归还：光标为空直接上光标（贴合"从机器里换出旧件"的直觉），否则进背包、装不下落地。 */
+    public static void giveOrDropOnCursor(@NotNull Player player, @NotNull ItemStack item) {
+        ItemStack onCursor = player.getItemOnCursor();
+        if (onCursor == null || onCursor.getType().isAir()) {
+            player.setItemOnCursor(item);
+            return;
+        }
+        giveOrDropItem(player, item);
     }
 
     public static void send(@NotNull CommandSender p, String message) {

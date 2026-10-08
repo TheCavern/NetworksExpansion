@@ -72,6 +72,10 @@ messages:
     no_menu: "No menu found"
     unsupported_blueprint: "Unsupported blueprint"
     broken_blueprint: "Damaged Blueprint"
+    not_enough_items: "Not enough items"
+    no_location_found: "No location found"
+    no_enough_items: "Not enough items"
+    cannot_access_code: "Cannot access code"
   blueprint:
     title: "<click_info>Recipe specified"
     empty: "<passive>Empty"
@@ -139,6 +143,7 @@ messages:
     help:
       - "&6Networks Command Help:"
       - "&6/networks help - Shows this help message."
+      - "&6/networks celltoquantum - Convert the held storage cell contents into quantum storage of the corresponding tiers."
       - "&6/networks fillquantum <amount> - Fills the held quantum storage with the specified amount."
       - "&6/networks fixblueprint <keyInMeta> - Fixes the held crafting blueprint."
       - "&6/networks addstorageitem <amount> - Adds items to the network drawer you are looking at."
@@ -195,6 +200,9 @@ messages:
         - "&6ex: /networks viewLog"
       unknown-command:
         - "<error>Unknown command! Please use /networks help for help."
+      celltoquantum:
+        - "&6/networks celltoquantum - Convert the held storage cell contents into quantum storage of the corresponding tiers."
+        - "&6ex: /networks celltoquantum"
     worldedit:
       must-select-range: "&cPlease select an area first!"
       must-select-same-world: "&cPlease select two positions in the same world!"
@@ -215,6 +223,11 @@ messages:
       set-pos1-with-blocks: "&aSet pos1 to %s (%s Blocks)"
       set-pos2-with-blocks: "&aSet pos2 to %s (%s Blocks)"
       invalid-slot: "&cSlot number must be between 0-53!"
+    celltoquantum:
+      need-cell: "<error>You must hold a storage cell"
+      empty: "<warning>This cell is empty"
+      converted: "<success>Converted the cell contents into quantum storage of the corresponding tiers"
+      none-converted: "<warning>The cell contains no items that can be converted"
   normal-operation:
     common:
       page: "Page"
@@ -300,6 +313,13 @@ messages:
         - "<click_info>Left-click: <passive>Open details"
       item-flow-viewer-sub-click-behavior:
         - "<click_info>Left-click: <passive>Highlight machine"
+      linker-grid-click-behavior:
+        - "<click_info>Left click: <passive>Retrieve stored hyperlinks/quantum entanglement singularities"
+      linker-target-current: "<gold>Binding target: <white>{0}"
+      linker-target-auto: "Automatic (Quantum Storage → Cell → Drawer)"
+      linker-target-quantum_storage: "Quantum Storage only"
+      linker-target-cell: "Cells only"
+      linker-target-drawer: "Network Drawers only"
     comprehensive:
       auto_set_face: "Auto set direction"
   completed-operation:
@@ -381,6 +401,8 @@ messages:
       success: "&aCrafting successful"
     storage_card_converter:
       success: "&aConversion successful"
+    viewer:
+      linked-stack: "&aEntangled link history refreshed!"
   unsupported-operation:
     incompatible-jeg-version: "<error>JustEnoughGuide addon version is too low, please upgrade to the latest build"
     storage_card_converter:
@@ -433,6 +455,7 @@ messages:
       not-enough-items: "&cNot enough materials"
       node-type-not-same: "&cThe stored configuration type does not match the target"
       no-config: "&cPlease load a configuration first"
+      missing-item-entry: "- &e%sx%s"
     display:
       unknown_type: "Unknown display group type '%s', special model disabled."
     memory_card:
@@ -454,6 +477,7 @@ messages:
       not_found_chosen_item: "&cItem not found: %s"
       item_mover_empty: "&cNo items in the item mover"
       item_mover_item_mismatch: "&cItem mismatch"
+      unknown-world: "Unknown world"
     directional:
       unexcepted_value: "Unexpected value: %s"
     remote:
@@ -468,6 +492,7 @@ messages:
       invalid_custom_max_amount: "<passive>[<gold>Networks Expansion<passive>] <error>Advanced quantum storage must be between 1 and 140,737,488,355,328"
       invalid_custom_max_amount_new: "<passive>[<gold>Networks Expansion<passive>] <error>Advanced quantum storage must be between 1 and 140,737,488,355,328"
       may_duping: "Player \"%s\" attempted to use quantum storage to dupe at %s. (see https://b23.tv/BV1ZMXuBpEAz)"
+      dangerous_operation: "<error>Dangerous operation: do not connect quantum storage and network cells at the same time!"
     configurator:
       not_a_copyable_block: "<error>This block has no specified direction"
       not_a_pasteable_block: "<error>You must point to a network block with direction selection"
@@ -490,6 +515,12 @@ messages:
     crafter_manager:
       different_type_1: "&cThe stored blueprint does not match the crafter type"
       different_type_2: "&cStored: %s; &aExpected: %s"
+    viewer:
+      location-not-found: "&cCould not find the location of this item!"
+      link-stack-not-found: "&cNot enough hyperlinks/quantum entanglement singularities!"
+      no-permission: "&cYou do not have permission to access the corresponding storage block!"
+      cannot-access-code: "&cCannot access code; configuration failed!"
+      not-initialized: "&cCould not initialize LogiTech reflection; please contact the developer for help!"
   super-head:
     - "███╗   ██╗███████╗████████╗██╗    ██╗ ██████╗ ██████╗ ██╗  ██╗███████╗   "
     - "████╗  ██║██╔════╝╚══██╔══╝██║    ██║██╔═══██╗██╔══██╗██║ ██╔╝██╔════╝   "
@@ -529,6 +560,8 @@ messages:
     registering-listeners: "Registering listeners..."
     registering-commands: "Registering commands..."
     enabled-successfully: "Addon enabled successfully!"
+    initializing-cell-database: "Initializing the storage cell database..."
+    failed-to-init-cell-database: "Failed to initialize the storage cell database!"
   shutdown:
     saving-config: "Saving configuration information..."
     disconnecting-database: "Saving database information, please do not end the process!"
@@ -572,6 +605,540 @@ messages:
           - "When this plant matures,"
           - "you will get synthetic emerald fragments when harvesting."
   save-all: "Saving Networks Expansion data."
+  guide:
+    click-to-research: "&7Click to unlock this item"
+    cost: "Cost "
+    cost-level: " levels"
+    grid-new-style-custom-amount:
+      display-name: "&aAdvanced grid allows for custom quantity retrieval per transaction."
+      current-amount: "&7Current quantity: %s (Limitations: 1~%s)"
+      click-tip: "&7⇨ &eClick to set quantity"
+      input-prompt: "&ePlease enter the custom quantity for a single retrieval in the advanced grid."
+    quantum-hud-display-mode:
+      display-name-percent: "&bQuantum storage HUD display: &aPercentage display"
+      display-name-value: "&bQuantum storage HUD display: &4Numerical display"
+      click-tip-to-percent: "&7⇨ &eClick to use the quantum storage HUD display mode. Percentage display"
+      click-tip-to-value: "&7⇨ &eClick to use the quantum storage HUD display mode. Numerical display"
+    invalid-amount-input: "&ePlease enter a positive integer between 1 and %s"
+    amount-input-prompt: "&eEnter the quantity to retrieve"
+    quantity-input-prompt: "&eInput quantity"
+  cellnet:
+    search:
+      title: "<gold>Search"
+      current: "<passive>Current filter · <aqua>{0}"
+      none: "<passive>No search term set"
+      hint: "<click_info>Left click<passive> to enter a keyword · <click_info>Right click<passive> to clear · Supports Pinyin"
+      chat_hint: "<passive>Enter a search keyword in chat · Leave empty to clear · Supports Pinyin initials"
+      set: "<success>Search keyword · <aqua>{0}"
+      cleared: "<success>Search keyword cleared"
+      invalid: "<error>Search term is too long"
+      empty: "<error>No matching items"
+    cell:
+      button:
+        whitelist: "<warning>Whitelist"
+        per_unit_capacity: "<passive>  Capacity per unit · <white>{0}"
+        whitelist_count: "<passive>  Whitelist · <white>{0}<passive> / <white>{1}"
+        whitelist_enabled: "<passive>  Status · <success>● Enabled"
+        whitelist_disabled: "<passive>  Status · <passive>○ Disabled"
+        open_whitelist: "<passive>  Click to manage the whitelist"
+        setting_slot: "<passive>Whitelisted item"
+        setting_slot_hint: "<passive>  Click here while holding an item to add it"
+        remove_item: "<error>  Click to remove this item"
+        close: "<error>Close"
+        back: "<warning>Back"
+        upgrade: "<warning>Upgrade"
+        no_upgrade_needed: "<gold>No upgrade needed"
+        unlimited_hint: "<passive>  Unlimited capacity and item types; no upgrade needed"
+        current_units: "<passive>  Units · <white>{0}<passive> / <white>{1}"
+        upgrade_material: "<passive>  Upgrade material · <white>{0}"
+        upgrade_consume: "<passive>  Consumes 1 material · +1 unit"
+        no_upgrade_material: "<error>  No upgrade material available"
+        raw_capacity: "<error>  Capacity per unit: {0}"
+        item_count: "<passive>  Amount · <white>{0}"
+        reserved_on_lore: "<success>🔒 Unit reserved · <click_info>Shift+Left click<passive> to cancel"
+        reserved_off_lore: "<passive>Shift+Left click <white>to reserve this unit"
+        void_excess_on_lore: "<error>🔥 Void excess enabled · <click_info>Shift+Right click<passive> to disable"
+        void_excess_off_lore: "<passive>Shift+Right click <white>to void excess in this unit"
+        rename: "<gold>Rename"
+        rename_current: "<passive>  Current name · <white>{0}"
+        rename_default: "Unnamed"
+        rename_hint: "<passive>  Click to enter a new name in chat"
+      menu:
+        title_view: "<gold>Preview"
+        title_whitelist: "<gold>Storage Cell · Whitelist"
+        opened_by_another: "<error>Another player is viewing this cell; please try again later"
+        prev_page: "<aqua>Previous page"
+        first_page: "<passive>Already on the first page"
+        next_page: "<aqua>Next page"
+        last_page: "<passive>Already on the last page"
+      lore:
+        capacity_line: "<passive>  Capacity per unit · <white>{0}"
+        units_line: "<passive>  Units · {0}<passive> / <white>{1}  {2}"
+        remaining_units: "<passive>  Room for · <white>{0}<passive> more item types"
+        upgrade_line: "<warning>  Upgrade · <white>{0}<warning> → +1 unit"
+        not_configured: "Not configured"
+        hint_open: "<passive>  Right click to open · Manage cell"
+        hint_drive: "<passive>  Insert into a drive · Connect to the network"
+        name_line: "<passive>  Name · <white>{0}"
+        server_uuid: "<passive>  Server · <white>{0}"
+        item_entry: "<white>  {0}<passive> · <white>{1}"
+        and_more: "<passive>   ··· <white>{0}<passive> more entries"
+      whitelist_limit: "<error>The whitelist has reached the unit limit ({0}); upgrade the cell to unlock more units"
+      upgrade_maxed: "<error>This cell has reached its maximum number of units ({0})"
+      upgrade_no_material: "<error>No upgrade material is available for this cell"
+      upgrade_missing: "<error>Upgrade material missing from inventory: {0}"
+      cell_not_in_inventory: "<error>This storage cell was not found in your inventory"
+      upgrade_success: "<success>Upgrade successful! Current units: {0} / {1}"
+      rename_prompt: "<success>Enter the new cell name in chat:"
+      rename_cancelled: "<error>Rename cancelled"
+      rename_failed: "<error>Rename failed; make sure the cell is in your inventory"
+      rename_success: "<success>Cell renamed to: {0}"
+      wrong_server: "<error>This cell belongs to another server and cannot be used"
+      whitelist_not_allowed: "<error>Used cells and containers holding items cannot be whitelisted"
+      reserved_on: "<success>Unit reserved for this item: it remains occupied at zero quantity and cannot be used by other items"
+      reserved_off: "<passive>Unit reservation removed for this item"
+      void_excess_on: "<success>Void excess enabled for this unit: excess items of this type will be destroyed when full"
+      void_excess_off: "<passive>Void excess disabled for this unit"
+    line:
+      mode-locked: "<error>Insert a mode module to change the transfer mode"
+      mode-name: "<gold>Transfer mode"
+      mode-hint: "<passive>Left click for next · Right click for previous"
+      mode-row-current: "<success>● {0}"
+      mode-row-other: "<passive>○ {0}"
+      modes.NONE: "Unrestricted mode"
+      modes.NULL_ONLY: "Empty slots only"
+      modes.NONNULL_ONLY: "Non-empty slots only"
+      modes.FIRST_ONLY: "First slot only"
+      modes.LAST_ONLY: "Last slot only"
+      modes.FIRST_STOP: "First-stop mode"
+      modes.LAZY: "Lazy mode"
+      modes.VOID: "Void mode"
+      modes.SPECIFIED_QUANTITY: "Specified quantity mode"
+      modes.P2P: "Point-to-point mode"
+      modes.P2P_SPECIFIED_QUANTITY: "Point-to-point specified quantity mode"
+      distance-set: "<success>Distance set to {0} blocks (maximum {1} blocks)"
+      distance-locked: "<passive>Distance remains {0} blocks (maximum {1} blocks; insert range modules to increase it)"
+      distance-name: "<gold>Transfer distance · <white>{0} blocks <passive>/ Maximum {1} blocks"
+      distance-lore:
+        - "<passive>Maximum container distance along the selected direction"
+        - "<click_info>Click while holding any item<passive> · Stack size sets the distance (not consumed)"
+        - "<passive>Insert chain range modules to increase the limit"
+      direction-name: "<gold>Direction · <white>{0}"
+      direction-north: "North"
+      direction-south: "South"
+      direction-west: "West"
+      direction-east: "East"
+      direction-up: "Up"
+      direction-down: "Down"
+      template-locked-name: "<error>Push item slot"
+      template-locked-lore: "<passive>Place items to push here · Unlocked by capacity modules"
+      module-not-module: "<error>Only module items can be inserted"
+      module-capacity-unsupported: "<error>Grabbers have no template slots and do not need capacity modules"
+      module-binding-unsupported: "<error>Grabbers cannot push and do not need binding modules"
+      module-slot-name: "<passive>Module slot"
+      module-slot-lore: "<passive>Insert a module"
+      direction-no-permission: "<error>You do not have permission to open the target block"
+      direction-no-target: "<error>No accessible container in that direction"
+      binding-entry-name: "<gold>Per-container supply"
+      binding-entry-lore: "<passive>Assign a separate supply list to each container along the line"
+      binding-locked-name: "<passive>Per-container supply"
+      binding-locked-lore: "<passive>Insert a chain binding module to unlock"
+      binding-module-required: "<error>Insert a chain binding module first"
+      binding-grabber-unsupported: "<error>Grabbers cannot push and cannot use per-container supply"
+      binding-title-directions: "Per-container Supply · Select Direction"
+      binding-title-targets: "Per-container Supply · {0}"
+      binding-title-edit: "Per-container Supply · {0} Distance {1}"
+      binding-info-name: "<aqua>Supply list for this position"
+      binding-info-lore: "<passive>List <aqua>{0}<passive> / <aqua>{1} item types"
+      binding-direction-name: "<aqua>Direction · <white>{0}"
+      binding-direction-lore: "<passive>Containers on line <aqua>{0}<passive> · Lists configured <aqua>{1}<passive>"
+      binding-direction-closed: "<error>This direction is disabled"
+      binding-mode-name: "<aqua>Transfer mode for this direction"
+      binding-mode-follow: "Use machine mode"
+      binding-mode-hint: "<passive>Left click for next · Right click for previous · Unset uses machine mode"
+      binding-target-name: "<aqua>{0} · <white>Distance {1}"
+      binding-target-position: "<aqua>Position <white>{0}<aqua> · <white>{1}"
+      binding-list-item: "<passive>· "
+      binding-edit-hint-add: "<gold>[Left click]<aqua> Add item (not consumed)"
+      binding-edit-hint-remove: "<gold>[Right click]<aqua> Remove item"
+      binding-status-ok: "<success>Supplying normally"
+      binding-status-starving: "<warning>Out of stock · Skipping until restocked"
+      binding-status-empty: "<passive>Empty list · Supply paused"
+      binding-status-distance: "<warning>Beyond transfer distance · Increase range to activate"
+      binding-status-unreachable: "<passive>Idle · Line interrupted"
+      binding-status-shared: "<passive>No list set · Using machine templates"
+      binding-and-more: "<passive>…{0} types in total"
+      binding-hint-edit: "<gold>[Left click]<aqua> Edit list"
+      binding-hint-open: "<gold>[Right click]<aqua> Open container"
+      binding-hint-unbind: "<gold>[Shift+Left click]<aqua> Clear the list for this position"
+      binding-hint-cycle-mode: "<gold>[Shift+Right click]<aqua> Cycle transfer mode"
+      binding-mode-line: "<passive>Mode · <aqua>{0}"
+      binding-duplicate: "<error>This item is already in the list"
+      binding-full: "<error>The list is full (maximum 9 types)"
+      binding-unbind-item-removed: "<success>Item removed from the list"
+      binding-save-rejected: "<error>Save failed: data too large or serialization error"
+      binding-machine-gone: "<error>The machine no longer exists"
+      binding-target-gone: "<error>The target at this distance is no longer on the line"
+      configurator-title-select: "Chain Configurator · Select Direction"
+      configurator-info-lore: "<passive>Select a direction to copy all its binding settings"
+      configurator-dir-count: "<passive>Bindings <aqua>{0}"
+      configurator-dir-mode: "<passive>Mode override · <white>{0}"
+      configurator-dir-hint: "<gold>[Left click]<aqua> Copy direction"
+      configurator-lore-face: "<passive>Saved direction · <aqua>{0}"
+      configurator-lore-count: "<passive>Bindings · <aqua>{0}"
+      configurator-lore-follow: "<passive>Mode override · Use machine mode"
+      configurator-lore-hint-copy: "<gold>[Left click]<aqua> Copy direction settings"
+      configurator-lore-hint-apply: "<gold>[Right click]<aqua> Apply to machine"
+      configurator-lore-hint-clear: "<gold>[Shift+Swing in air]<aqua> Clear saved settings"
+      configurator-lore-mode: "<passive>Mode override · <aqua>{0}"
+      brush-no-line: "<error>This machine is not on any bound line"
+      brush-summary-label: "<passive>━━ <aqua>List<passive> ━━"
+      brush-summary-empty: "<passive>No list set"
+      brush-summary-bullet: "<passive>· "
+      brush-drag-title: "Supply Brush · Bulk Edit · {0}"
+      brush-drag-hint-add: "<gold>[Left click]<aqua> Add held item to this position"
+      brush-drag-hint-clear: "<gold>[Shift+Left click]<aqua> Clear the list for this position"
+      brush-drag-hint-edit: "<gold>[Right click]<aqua> Edit individual entries"
+      brush-dir-hint-drag: "<gold>[Right click]<aqua> Bulk edit the entire direction"
+    collect:
+      bind: "<success>Bound to network: {0}"
+      unbind: "<success>Unbound"
+      no-bind: "<warning>The held item is not bound to a network yet"
+      mode-inventory: "<success>Collection mode: inventory first, then network when full"
+      mode-direct: "<success>Collection mode: drops go directly into the network"
+      no-permission: "<error>You do not have permission to manage this network"
+      apply-success: "<success>Done! Drops from kills and mining will enter the bound network"
+      mark-lore: "§5Network Collection"
+    drive:
+      slot_marker: "<gold>Cell slot"
+      slot_marker_lore: "<passive>Hold a cell · <click_info>Click<passive> to insert"
+      display_name: "<gold>Cell Drive"
+      item_count: "<passive>Amount <aqua>{0}"
+      cell_count: "<passive>Cells <aqua>{0}<passive> / <aqua>{1}"
+      link_support: "<gold>Entangled link · <success>Available"
+      total_items: "<passive>Items <aqua>{0}"
+      item_types: "<passive>Types <aqua>{0}"
+      more_items: "<passive>··· More items"
+      item_entry: "<aqua>{0}<passive> × <aqua>{1}"
+      access_hint: "<click_info>Click<passive> to browse all stored items"
+      browse: "<passive>Browse storage"
+      prev_page: "<aqua>◀ Previous page"
+      first_page: "<passive>◀ Already on the first page"
+      next_page: "<aqua>Next page ▶"
+      last_page: "<passive>Already on the last page ▶"
+      back: "<passive>Back"
+      preview_title: "<gold>Storage Preview"
+      saving: "Drive cell data submitted for saving..."
+      cell_uuid_duplicate: "<error>Cannot insert: this cell UUID already exists in the drive"
+      whitelist_button: "<gold>Permissions · Whitelist"
+      whitelist_owner: "<passive>Owner <aqua>{0}"
+      whitelist_count: "<passive>Whitelist <aqua>{0}<passive> players"
+      whitelist_no_owner: "<error>This drive has no owner yet"
+      whitelist_open_hint: "<click_info>Click to manage whitelisted players"
+      whitelist_title: "<gold>Cell Drive · Whitelist"
+      whitelist_owner_head: "<gold>Owner · {0}"
+      whitelist_owner_head_lore: "<passive>The player who placed this drive"
+      whitelist_add: "<success>Add player"
+      whitelist_add_lore: "<click_info>Click, then enter a player name in chat"
+      whitelist_remove_hint: "<error>Click to remove this player"
+      whitelist_not_owner: "<error>You are not the owner of this drive"
+      whitelist_enter_name: "<success>Enter the name of the player to add in chat"
+      whitelist_player_not_found: "<error>Player not found"
+      whitelist_name_invalid: "<error>Invalid player name; use only letters, numbers, and underscores"
+      whitelist_name_too_long: "<error>Player name is too long (maximum 16 characters)"
+      whitelist_is_owner: "<error>This player is already the owner"
+      whitelist_already: "<warning>This player is already whitelisted"
+      whitelist_full: "<error>The whitelist is full; remove some players first"
+      whitelist_added: "<success>Added {0} to the whitelist"
+      whitelist_removed: "<success>Removed {0} from the whitelist"
+      whitelist_add_timeout: "<warning>Input timed out; adding to the whitelist was cancelled"
+      break_not_allowed: "<error>You do not have permission to break this drive"
+    cleaner:
+      cell_name: "<passive>Cell <aqua>{0}"
+      item_types: "<passive>Item types <aqua>{0}"
+      item_count: "<passive>Amount <aqua>{0}"
+      delete_hint: "<click_info>Shift+Click to delete this item"
+      no_cell: "<passive>No cell inserted"
+      info_title: "<passive>Cell Cleaner"
+      prev_page: "<aqua>◀ Previous page"
+      first_page: "<passive>◀ Already on the first page"
+      next_page: "<aqua>Next page ▶"
+      last_page: "<passive>Already on the last page ▶"
+    converter:
+      item_count: "<passive>Amount <aqua>{0}"
+      transfer_hint: "<click_info>Click to transfer"
+      output_full: "<passive>Output slots are full; remove items before transferring"
+      no_matching_storage: "<passive>No quantum storage tier matches this cell capacity"
+      no_quantum_storage: "<passive>Insert quantum storage of the same tier first"
+      tier_mismatch: "<passive>Quantum storage tier does not match the cell"
+      units_full: "<error>The cell has reached its item type limit; clear some types first"
+      whitelist_rejected: "<error>This item is not whitelisted"
+      item_capacity_full: "<error>This item has reached the capacity limit per unit"
+      info_title: "<passive>Cell Information"
+      cell_name: "<passive>Cell <aqua>{0}"
+      item_types: "<passive>Item types <aqua>{0}"
+      no_cell: "<passive>No cell inserted"
+      output_count: "<passive>Output slots used <aqua>{0}<passive>/{1}"
+      prev_page: "<aqua>◀ Previous page"
+      first_page: "<passive>◀ Already on the first page"
+      next_page: "<aqua>Next page ▶"
+      last_page: "<passive>Already on the last page ▶"
+    persistence:
+      db_initialized: "Network storage cell database initialized"
+      db_closed: "Network storage cell database closed"
+      backup_failed: "Backup failed: {0}"
+      backup_file_missing: "Database file does not exist: {0}"
+      backup_copy_failed: "Failed to copy database file: {0}"
+      backup_cleanup_failed: "Failed to delete old backup: {0}: {1}"
+      cell_resolve_tpl_failed: "Cannot resolve tpl_id={0} (cell {1})"
+      cell_load_whitelist_failed: "Failed to load cell whitelist: {0}"
+      cell_save_whitelist_failed: "Failed to save cell whitelist: {0}"
+      cell_load_items_failed: "Failed to load cell items: {0}"
+      cell_serialize_whitelist_failed: "Failed to serialize whitelist: {0}"
+      cell_deserialize_whitelist_failed: "Failed to deserialize whitelist: {0}"
+      schema_init_failed: "Failed to initialize cell storage schema: {0}"
+      schema_mark_version_failed: "Failed to mark schema version: {0}"
+      template_insert_failed: "Failed to INSERT item template: {0}"
+      template_query_failed: "Failed to query item template: {0}"
+      template_query_all_failed: "Failed to query all item templates: {0}"
+      template_load_failed: "Failed to load item templates from database: {0}"
+      template_preload_failed: "Failed to preload item templates: {0}"
+      template_register_failed: "Cannot register item template"
+      journal_flush_failed: "Journal flush batch failed: {0}"
+      journal_flush_partial: "Journal partially failed to flush; rolling back {0} rows"
+      checkpoint_failed: "Checkpoint failed: {0}"
+      checkpoint_lock_timeout: "Checkpoint lock timed out; skipping"
+      checkpoint_batch_failed: "Checkpoint batch error: {0}"
+      checkpoint_snapshot_hash_failed: "Failed to calculate snapshot_hash: {0}"
+      checkpoint_mark_corrupted_failed: "Failed to mark corrupted journal: {0}"
+      checkpoint_query_max_id_failed: "Failed to query maximum journal_id: {0}"
+      checkpoint_archive_failed: "Archive/cleanup failed: {0}"
+      replay_lock_timeout: "Replay lock timed out"
+    input:
+      previous_cancelled: "<passive>Previous pending input cancelled"
+      channel_hint: "<click_info>Input activated: press T to open chat, enter a channel name, and press Enter (≤{0} characters); enter - to unbind"
+      channel_invalid: "<error>Invalid channel name: must be non-empty and at most {0} characters"
+      target_hint: "<click_info>Enter the crafting plan quantity · <passive>0 for continuous crafting"
+      keep_hint: "<click_info>Enter the stock quantity to maintain · <passive>0 to disable replenishment"
+      target_invalid: "<error>Enter a valid integer · <passive>0 for continuous crafting"
+    assembly:
+      switch_on: "<success>Assembler started"
+      switch_off: "<success>Assembler stopped"
+      clear_slots_empty: "<error>No assembly cards in the recipe slots; nothing to clear"
+      slots_cleared: "<success>Recipe slots cleared; items returned"
+      blueprint_invalid: "<error>This is not a valid assembly card"
+      target_set: "<success>Crafting plan <aqua>{0}<passive> · 0 for continuous crafting"
+      target_slot_lost: "<error>The target slot no longer exists"
+      status_name: "<gold>Assembly Center"
+      status_phase: "<passive>{0}"
+      phase_active: "<success>Running"
+      phase_no_network: "<passive>Not connected to a network"
+      task_row_title: "<gold>Production line"
+      task_gear: "<passive>Speed <aqua>{0}  {1}"
+      gear_on: "▮"
+      gear_off: "<passive>▯"
+      gear_stop: "<error>Stopped"
+      gear_level: "<aqua>×{0}"
+      gear_max: "<gold>∞"
+      task_gear_max_note: "<passive>Full-load speed · Maximum per cycle; excess continues next second"
+      task_continuous: "<passive>Current mode · <success>Continuous crafting"
+      task_plan: "<passive>Current mode · <gold>Crafting plan <aqua>{0} remaining"
+      task_plan_unset: "<passive>Current mode · <gold>Crafting plan<passive> · <error>No plan set"
+      task_plan_done: "<passive>Current mode · <gold>Crafting plan<passive> · <error>No crafting tasks"
+      task_replenish: "<passive>Current mode · <gold>Replenishment<passive> · Maintain <aqua>{0}"
+      task_replenish_unset: "<passive>Current mode · <gold>Replenishment<passive> · <error>No quantity set"
+      task_hint: "<click_info>Left click<passive> to increase speed · <click_info>Right click<passive> to decrease speed · <click_info>Shift+Left click<passive> to change mode · <click_info>Shift+Right click<passive> to set quantity"
+      task_replenish_stock: "<passive>Stock <aqua>{0}<passive> / <aqua>{1}<passive> · {2}"
+      task_replenish_ok: "<success>Stock target met"
+      task_replenish_doing: "<gold>Replenishing"
+      plan_on: "<success>Switched to crafting plan<passive> · <click_info>Shift+Right click<passive> to set the plan"
+      replenish_on: "<success>Switched to replenishment mode<passive> · <click_info>Shift+Right click<passive> to set the plan"
+      continuous_on: "<success>Switched to continuous crafting"
+      keep_set: "<success>Replenishment · Maintain <aqua>{0}"
+      task_blocked: "<error>Stopped: storage full"
+      task_available: "<passive>Craftable <aqua>{0}"
+      task_available_infinite: "<passive>Craftable <aqua>∞"
+      upgrade_invalid: "<error>Only overclock cores can be inserted"
+      smart_invalid: "<error>Only smart cores can be inserted"
+      smart_slot_no_core: "<error>Insert a smart core first, then click with a configurator to bind"
+    workshop:
+      no_network: "<error>The assembly workshop is not connected to a network"
+      no_power: "<error>Not enough network power (requires 2000J)"
+      no_card: "<error>No blank assembly card in the card slot or network"
+      invalid_recipe: "<error>Could not identify a valid recipe"
+      material_short: "<error>Not enough materials; add the missing materials before encoding"
+      output_full: "<error>Output slots are full"
+      clear_no_recipe: "<error>No encoded assembly card in the card slot"
+      clear_ok: "<success>Recipe cleared; materials returned to the material slots"
+    storage_assembler:
+      status_name: "<gold>Automatic Container Filler"
+      phase_run: "<success>● Running"
+      phase_paused: "<passive>‖ Paused"
+      phase_no_template: "<warning>▲ Waiting · No loading list set"
+      phase_no_container: "<warning>▲ Waiting · Container area empty"
+      phase_no_material: "<warning>▲ Waiting · Network lacks listed items"
+      phase_full: "<error>■ Output area full"
+      phase_no_network: "<error>■ Not connected to a network"
+      phase_loading: "<warning>▲ Waiting · Loading drawer data"
+      templates_line: "<passive>Loading list <aqua>{0}<passive> types"
+      storage_line: "<passive>Container area <aqua>{0}<passive>/{1} · Filling <aqua>{2}<passive> · Output <aqua>{3}<passive>/{4}"
+      filled_line: "<passive>Loaded last cycle <aqua>{0}"
+      hint_line: "<click_info>List area<passive> for items to load · <click_info>Container area<passive> for storage · <gold>Loads as much as available"
+      state_empty: "Empty"
+      filling_line: "<gold>Filling · <white>{0}<white> containers"
+      paused: "<success>Paused"
+      resumed: "<success>Resumed"
+      container_rejected: "<error>Only shulker boxes / storage cells / quantum storage / bound drawers are supported"
+      container_oversize: "<error>Container NBT is too large to insert"
+      drawer_unbound: "<error>Drawer has no bound data · Place and break it once first"
+      drawer_placed: "<error>Drawer data is in use by a block elsewhere"
+      void_cell_rejected: "<error>Void cells cannot be filled"
+      break_not_allowed: "<error>You do not have permission to break this automatic container filler"
+      pending_corrupted: "Automatic container filler pending data corrupted; cleared and restarted filling: {0}"
+      buffer_corrupted: "Automatic container filler buffer data corrupted; cleared: {0}"
+    void:
+      title: "<gold>Void Cell · Filter"
+      not_void_cell: "<error>This is not a void cell"
+      cell_lore:
+        - "<passive>Destroys matching items to handle network overflow"
+        - "<click_info>Right click<passive> to configure the filter"
+        - "<error>Cannot be inserted into an ender drive"
+      saved: "<success>Filter saved"
+      extra_whitelist: "<passive>Whitelist · Only consumes matching items"
+      editing_by_other: "<error>Another player is editing this cell"
+      save_target_missing: "<error>Original cell not found; changes were not saved"
+      filter_rejected: "<error>Void cells and blacklisted items cannot be used as filters"
+      lore_filter_empty: "<passive>Filter · Not set (right click to edit)"
+      lore_filter_header: "<passive>Filter · <aqua>{0}<passive> types"
+      lore_filter_entry: "<passive>· <aqua>{0}"
+    ender:
+      sneak_hint: "<passive>Sneak + click the center slot to bind a channel"
+      bind_failed: "<error>Channel binding failed; please try again"
+      display_name: "<gold>Ender Drive · <aqua>{0}"
+      channel_none: "<passive>Unbound"
+      channel_bound: "<success>Bound to channel <aqua>{0}"
+      channel_unbound: "<passive>Unbound"
+      unbind_nothing: "<passive>This drive is not bound to a channel"
+      unbind_not_owner: "<error>You are not the owner of this drive and cannot unbind it"
+      display_shared: "<success>Sharing · Cells shared within the channel"
+      display_independent: "<passive>Independent · Not in a channel"
+      display_members: "<passive>Channel members <aqua>{0}<passive> cells"
+      display_sneak_hint: "<click_info>Click the center slot to unbind · Use a configurator to bind"
+      void_rejected: "<error>Void cells cannot be inserted into an ender drive"
+      table_create_failed: "Failed to create ender channel database table"
+      write_failed: "Failed to write ender channel data: {0}"
+      read_failed: "Failed to read ender channel data: {0}"
+    configurator:
+      not_ender_drive: "<error>This block is not an ender drive"
+      not_owner: "<error>You are not the owner of this drive"
+      copied: "<success>Copied channel <aqua>{0}"
+      drive_no_channel: "<error>This drive has no channel yet; right click to create one"
+      bound: "<success>Bound to channel <aqua>{0}"
+      bound_new: "<success>Created channel <aqua>{0}<success> and bound it"
+      cleared: "<passive>Configurator cleared"
+    monitor:
+      title: "<gold>Assembly Monitor"
+      drive_name: "<gold>Assembly Drive <aqua>({0}, {1}, {2})"
+      drive_status_on: "<success>Running"
+      drive_status_off: "<passive>Stopped"
+      core_overclock: "<gold>Overclock✓"
+      core_smart: "<aqua>Smart✓"
+      core_none: "<error>No core"
+      drive_lines: "<passive>Active production lines <aqua>{0}<passive>/9"
+      drive_blocked: "<error>Stopped: storage full <aqua>{0}"
+      drive_hint: "<click_info>Left click<passive> to view production lines · <click_info>Right click<passive> to open drive"
+      refresh_name: "<gold>Refresh"
+      prev_page: "<aqua>◀ Previous page"
+      first_page: "<passive>◀ Already on the first page"
+      next_page: "<aqua>Next page ▶"
+      last_page: "<passive>Already on the last page ▶"
+      back: "<passive>Back"
+      detail_open: "<gold>Open drive interface"
+      name_button: "<gold>Name production line"
+      name_current: "<passive>Current name · <aqua>{0}"
+      name_none: "<error>Unnamed"
+      name_action_gear: "<click_info>Left click<passive> to rename"
+      name_action_clear: "<click_info>Right click<passive> to clear name"
+      name_hint: "<click_info>Enter a name · <passive>Maximum 16 characters · Enter - to clear"
+      name_set: "<success>Named <aqua>{0}"
+      name_invalid: "<error>Name is empty or exceeds 16 characters"
+      name_cleared: "<success>Assembly drive name cleared"
+      name_duplicate: "<error>Name <aqua>{0}<error> is already used by another assembly drive"
+      search_name: "<gold>Search Production Lines / Drives"
+      search_none: "<passive>No search term set"
+      search_current: "<passive>Current filter · <aqua>{0}"
+      search_hint_button: "<click_info>Left click<passive> to enter a keyword · <click_info>Right click<passive> to clear · Supports Pinyin"
+      search_hint: "<passive>Enter a search keyword in chat · Leave empty to clear · Supports Pinyin initials"
+      search_set: "<success>Search keyword · <aqua>{0}"
+      search_cleared: "<success>Search keyword cleared"
+      search_invalid: "<error>Search term is too long"
+      search_empty: "<error>No matching production lines"
+      drive_not_loaded: "<error>This drive is not loaded; open it manually once first"
+      line_mode_continuous: "<success>Continuous crafting"
+      line_mode_plan: "<gold>Crafting plan · Remaining <aqua>{0}"
+      line_mode_plan_unset: "<error>Crafting plan · No plan set"
+      line_mode_plan_done: "<gold>Crafting plan · No tasks"
+      line_mode_replenish: "<gold>Replenishment · Maintain <aqua>{0}"
+      line_mode_replenish_unset: "<error>Replenishment · No quantity set"
+      view_all: "<gold>View · All production lines"
+      view_lines: "<gold>View · By drive"
+      all_none: "<error>No named assembly drives"
+      line_belongs: "<passive>Belongs to <gold>{0}"
+      line_gear: "<passive>Speed {0}"
+      line_gear_stop: "<passive>Speed · <error>Stopped"
+      line_blocked: "<error>Stopped: storage full"
+      line_hint_gear: "<click_info>Left click<passive> to increase speed · <click_info>Right click<passive> to decrease speed"
+      line_hint_mode: "<click_info>Shift+Left click<passive> to change mode · <click_info>Shift+Right click<passive> to set quantity"
+      no_permission: "<error>You do not have permission to manage this drive"
+    manager:
+      title: "<gold>Drive Monitor"
+      drive_name: "<gold>Cell Drive <aqua>({0}, {1}, {2})"
+      type_standard: "<machine>Standard"
+      type_ender: "<tool>Ender"
+      cells: "<passive>Cells <aqua>{0}<passive>/9"
+      stored: "<passive>Stored items <aqua>{0}"
+      drive_hint: "<click_info>Left click<passive> to open · <click_info>Right click<passive> for arrow guidance"
+      drive_hint_name: "<click_info>Shift+Left click<passive> to rename · <click_info>Shift+Right click<passive> to clear name"
+      empty: "<error>No cell drives in the network"
+      search_name: "<gold>Search Drives"
+      search_none: "<passive>No search term set"
+      search_current: "<passive>Current filter · <aqua>{0}"
+      search_hint_button: "<click_info>Left click<passive> to enter a keyword · <click_info>Right click<passive> to clear · Supports Pinyin"
+      search_set: "<success>Search keyword · <aqua>{0}"
+      search_cleared: "<success>Search keyword cleared"
+      search_empty: "<error>No matching drives"
+      name_cleared: "<success>Drive name cleared"
+      name_set: "<success>Named <aqua>{0}"
+      guide_started: "<success>Guidance started · Follow the arrows on the ground to find the drive"
+      guide_arrived: "<success>Arrived at the drive"
+      guide_replaced: "<passive>Guidance target changed"
+      guide_distance: "<gold>Cell Drive<white> · Distance <aqua>{0}<white> blocks{1}"
+      guide_up: "<gold> · Target is higher"
+      guide_down: "<gold> · Target is lower"
+    assemblycard:
+      title: "<gold>Assembly Card · Recipe Editor"
+      not_card: "<error>You are no longer holding an assembly card"
+      save_ok: "<success>Recipe saved"
+      save_failed_output: "<error>Output slot is empty"
+      save_failed_inputs: "<error>Place materials in the 3×3 grid first"
+      save_failed_blacklist: "<error>Inputs or output contain disallowed items"
+      save_failed_same: "<error>Output cannot be the same as the materials"
+      save_failed_overflow: "<error>Material limit exceeded: maximum {0} types / {1} items"
+      save_failed_not_real: "<error>Arrangement does not match any recipe; cannot save"
+      save_failed_disabled: "<error>This recipe output is disabled"
+      save_failed_moved: "<error>The held card moved during editing; save cancelled"
+      clear_done: "<passive>Card reset to blank; ready for a new recipe"
+      clear_failed_moved: "<error>The held card moved during editing; reset cancelled"
+      lore_output: "<passive>Output"
+      lore_inputs: "<passive>Materials (consumed per cycle)"
+      lore_entry: "<aqua>{0}<passive> × <aqua>{1}"
+  match-option:
+    title: "Item Matching Options"
+    click_tip: "Click to toggle this ignore option"
+    enabled: "Currently: ignored"
+    disabled: "Currently: not ignored"
+  purger:
+    match_option_settings: "Left click to configure item matching"
 icons:
   keybind-settings:
     name: "&6Keybind Settings"
@@ -726,6 +1293,15 @@ icons:
     name: "&6Whitelist Mode"
     lore:
       - "&7Click to switch to blacklist mode"
+  linker-type-hyper-link:
+    lore:
+      - '&aClick to change the link to &d Quantum Entanglement Singularity'
+    name: '&6Link usage: &dHyperlink'
+  linker-type-quantum-link:
+    lore:
+      - 'Click to change the link to a &dHyperlink.'
+    name: '&6Link usage: &dQuantum Entanglement Singularity'
+
   match-mode-all-match:
     name: "&6All Match Mode"
     lore:
@@ -789,6 +1365,7 @@ icons:
     void: "Void Mode"
     specified_quantity: "Specified Quantity Only"
     p2p: "P2P Mode"
+    p2p_specified_quantity: "Point-to-point specified quantity mode"
   mechanism:
     transfers:
       data_title: "&a⇩Transfer Data⇩"
@@ -1121,6 +1698,216 @@ icons:
       lore:
         - "Crafted in the Quantum Workbench"
 
+  cellnet-back-button:
+    name: "<gold>Back"
+  cellnet-search-empty:
+    name: "<error>No matching items"
+    lore:
+      - "<passive>Right click the search button to clear the filter"
+  cellnet-assemblycard-save:
+    name: "<gold>Save Recipe"
+    lore:
+      - "<passive>If the arrangement does not match a recipe, it <error>cannot be saved"
+      - "<passive>Materials in the slots will be returned"
+  cellnet-assemblycard-clear:
+    name: "<gold>Reset Card"
+    lore:
+      - "<passive>Materials in the slots will be returned"
+      - "<passive>Clears the card so a new recipe can be configured"
+  cellnet-assemblycard-arrow:
+    name: "<gold>→ Output Preview"
+  cellnet-assemblycard-hint:
+    name: "<gold>Instructions"
+    lore:
+      - "<click_info>Click or drag<passive> to place materials in the 3×3 grid"
+      - "<passive>When ready, <click_info>click Save<passive> to identify the output automatically"
+      - "<passive>Recorded recipes fill the grid; adjust and save again"
+  cellnet-assembly-slot-marker:
+    name: "<gold>Production line slot"
+    lore:
+      - "<passive>Insert an assembly card"
+      - "<click_info>Click with an empty hand<passive> to retrieve"
+  cellnet-assembly-upgrade-slot:
+    name: "<gold>Upgrade slot"
+    lore:
+      - "<passive>Insert an overclock core"
+      - "<passive>Unlocks full-load speed <gold>∞"
+  cellnet-assembly-smart-slot:
+    name: "<gold>Smart slot"
+    lore:
+      - "<passive>Insert a smart core"
+      - "<passive>Click with a <click_info>channel configurator<passive> to bind a channel"
+  cellnet-assembly-switch-on:
+    name: "<success>Assembly · Running"
+    lore:
+      - "<click_info>Click<passive> to toggle the entire machine"
+  cellnet-assembly-switch-off:
+    name: "<passive>Assembly · Stopped"
+    lore:
+      - "<click_info>Click<passive> to toggle the entire machine"
+  cellnet-assembly-task-empty:
+    name: "<passive>Empty production line · Insert an assembly card"
+  cellnet-void-info:
+    name: "<gold>Void Filter"
+    lore:
+      - "<passive>Place filters in the <aqua>9<passive> slots below, just like a chest"
+      - "<passive>Changes are saved immediately"
+      - "<passive>Matching items are <gold>destroyed"
+  cellnet-void-close:
+    name: "<error>Close"
+    lore:
+      - "<passive>Changes have been saved immediately"
+      - "<passive>Closing with <click_info>E<passive> also saves changes"
+  cellnet-drive-whitelist-add:
+    name: "<success>Add player"
+    lore:
+      - "<click_info>Click<passive>, then enter a player name in chat"
+  cellnet-drive-browse:
+    name: "<gold>Browse Storage"
+    lore:
+      - "<passive>View all network storage"
+  cellnet-template-slot-marker:
+    name: "<aqua>Template slot"
+    lore:
+      - "<passive>Place items for the machine to load"
+      - "<passive>Multiple types allowed · Loaded from left to right"
+  cellnet-assembler-status:
+    name: "<gold>Operating Status"
+    lore:
+      - "<passive>Shows current status and filling progress in real time"
+  cellnet-assembler-pause:
+    name: "<gold>Pause"
+    lore:
+      - "<passive>Pause retrieval and filling · Progress preserved"
+  cellnet-assembler-resume:
+    name: "<success>Resume"
+    lore:
+      - "<passive>Resume automatic filling · Continue from saved progress"
+  cellnet-assembler-box-off:
+    name: "<passive>Even Shulker Distribution · Off"
+    lore:
+      - "<passive>Only affects shulker boxes"
+      - "<click_info>Click to enable<passive> · Template types take turns filling slots"
+  cellnet-assembler-box-on:
+    name: "<success>Even Shulker Distribution · On"
+    lore:
+      - "<passive>Only affects shulker boxes"
+      - "<click_info>Click to disable<passive> · Fill slots sequentially again"
+  cellnet-assembly-drive-clear-slots:
+    name: "<error>Clear Recipe Slots"
+    lore:
+      - "<passive>Click to return all items in the recipe slots"
+  cellnet-workshop-encode:
+    name: "<gold>Encode Recipe"
+    lore:
+      - "<passive>Left click to encode once · Shift for up to 64 times"
+  cellnet-workshop-clear:
+    name: "<error>Clear Recipe"
+    lore:
+      - "<passive>Insert an encoded card and click: materials return to their slots and the card becomes blank"
+  cellnet-converter-mode-export:
+    name: "<passive>Cell → Quantum Storage"
+    lore:
+      - "<click_info>Click to change mode"
+  cellnet-converter-mode-import:
+    name: "<passive>Quantum Storage → Cell"
+    lore:
+      - "<click_info>Click to change mode"
+  cellnet-cell-toggle-on:
+    name: "<success>● Whitelist enabled"
+    lore:
+      - "<passive>Click to toggle"
+  cellnet-cell-toggle-off:
+    name: "<passive>○ Whitelist disabled"
+    lore:
+      - "<passive>Click to toggle"
+  cellnet-cell-upgrade-max:
+    name: "<gold>No upgrade needed"
+  cellnet-page-arrow:
+    name: "<passive>Change page"
+  cellnet-search-icon:
+    name: "<gold>Search Storage"
+  cellnet-preview-fill:
+    name: "<passive>Preview area"
+  cellnet-line-module-slot:
+    name: "<passive>Module slot"
+  cellnet-line-template-locked:
+    name: "<error>Push item slot"
+  cellnet-line-distance:
+    name: "<gold>Transfer distance"
+  cellnet-line-mode-on:
+    name: "<gold>Transfer mode"
+  cellnet-line-mode-off:
+    name: "<passive>Transfer mode"
+  cellnet-line-direction-on:
+    name: "<success>Direction"
+  cellnet-line-direction-off:
+    name: "<aqua>Direction"
+  cellnet-line-direction-fallback:
+    name: "<gold>Direction"
+  cellnet-chain-binding-entry:
+    name: "<gold>Bound supply"
+  cellnet-chain-binding-entry-locked:
+    name: "<passive>Bound supply (locked)"
+  cellnet-chain-binding-info:
+    name: "<gold>Binding Management"
+  cellnet-chain-binding-mode-on:
+    name: "<gold>Direction mode override"
+  cellnet-cleaner-cell-slot:
+    name: "<success>Cleaner cell slot"
+    lore:
+      - "<passive>Hold a cell and <click_info>click<passive> to insert"
+  cellnet-cleaner-close:
+    name: "<error>Close"
+  cellnet-display-placeholder:
+    name: " "
+  cellnet-converter-border:
+    name: " "
+  cellnet-converter-cell-slot:
+    name: "<success>Converter cell slot"
+    lore:
+      - "<passive>Hold a cell and <click_info>click<passive> to insert"
+  cellnet-converter-close:
+    name: "<error>Close"
+  cellnet-setting-slot:
+    name: "<success>Whitelisted item"
+    lore:
+      - "<passive>Hold an item and <click_info>click<passive> here to add it"
+  match-option-settings:
+    name: "&6Item Matching Options"
+    lore:
+      - "&aChoose which properties this purger ignores"
+      - "&awhen matching network items (none ignored by default)"
+  match-option-close:
+    name: "&cClose"
+    lore:
+      - "&aClose this interface"
+  match-option:
+    ignore-durability:
+      name: "&6Ignore Item Durability"
+      lore:
+        - "&aDo not compare item durability when matching"
+    ignore-enchantment:
+      name: "&6Ignore Item Enchantments"
+      lore:
+        - "&aDo not compare item enchantments when matching"
+    ignore-attribute:
+      name: "&6Ignore Item Attributes"
+      lore:
+        - "&aDo not compare item attribute modifiers when matching"
+    ignore-lore:
+      name: "&6Ignore Item Lore"
+      lore:
+        - "&aDo not compare item lore when matching"
+    ignore-custom-model-data:
+      name: "&6Ignore Custom Model Data"
+      lore:
+        - "&aDo not compare custom model data when matching"
+  linker-target-switch:
+    name: "&6Binding Target"
+    lore:
+      - "&aClick to change the storage type to bind"
+      - "&7Only applies in quantum entanglement mode"
 items:
   # DO NOT CHANGE OR DELETE THESE ANNOUNCEMENTS
   NTW_EXPANSION_ANNOUNCE_1:
@@ -3426,104 +4213,91 @@ items:
       - "Stores a large number of items in a quantum singularity"
 
   NTW_QUANTUM_STORAGE_10:
-    name: "Network Quantum Storage (1024)"
+    name: "Network Quantum Storage (1K)"
     lore:
-      - "Can store 1024 items"
+      - "Can store 1,024 items"
       - ""
       - "Stores a large number of items in a quantum singularity"
-
   NTW_QUANTUM_STORAGE_1:
     name: "Network Quantum Storage (4K)"
     lore:
-      - "Stores 4096 items"
+      - "Can store 4,096 items"
       - ""
       - "Stores items in mass quantities within"
       - "a quantum singularity."
-
   NTW_QUANTUM_STORAGE_2:
     name: "Network Quantum Storage (32K)"
     lore:
-      - "Stores 32768 items"
+      - "Can store 32,768 items"
       - ""
       - "Stores items in mass quantities within"
       - "a quantum singularity."
-
   NTW_QUANTUM_STORAGE_3:
     name: "Network Quantum Storage (262K)"
     lore:
-      - "Stores 262144 items"
+      - "Can store 262,144 items"
       - ""
       - "Stores items in mass quantities within"
       - "a quantum singularity."
-
   NTW_QUANTUM_STORAGE_4:
     name: "Network Quantum Storage (2M)"
     lore:
-      - "Stores 2097152 items"
+      - "Can store 2,097,152 items"
       - ""
       - "Stores items in mass quantities within"
       - "a quantum singularity."
-
   NTW_QUANTUM_STORAGE_5:
     name: "Network Quantum Storage (16M)"
     lore:
-      - "Stores 16777216 items"
+      - "Can store 16,777,216 items"
       - ""
       - "Stores items in mass quantities within"
       - "a quantum singularity."
-
   NTW_QUANTUM_STORAGE_6:
     name: "Network Quantum Storage (134M)"
     lore:
-      - "Stores 134217728 items"
+      - "Can store 134,217,728 items"
       - ""
       - "Stores items in mass quantities within"
       - "a quantum singularity."
-
   NTW_QUANTUM_STORAGE_7:
     name: "Network Quantum Storage (1B)"
     lore:
-      - "Stores 1073741824 items"
+      - "Can store 1,073,741,824 items"
       - ""
       - "Stores items in mass quantities within"
       - "a quantum singularity."
-
   NTW_QUANTUM_STORAGE_8:
-    name: "Network Quantum Storage (∞)"
+    name: "Network Quantum Storage (2.1B)"
     lore:
-      - "Stores ∞ items... almost"
+      - "Can store 2,147,483,647 items"
       - ""
       - "Stores items in mass quantities within"
       - "a quantum singularity."
-
   NTW_QUANTUM_STORAGE_11:
-    name: "Network Quantum Storage (34B)"
+    name: "Network Quantum Storage (34.4B)"
     lore:
-      - "Can store an almost infinite number of items"
+      - "Can store 34,359,738,352 items"
       - ""
       - "Stores a large number of items in a quantum singularity"
-
   NTW_QUANTUM_STORAGE_12:
-    name: "Network Quantum Storage (549B)"
+    name: "Network Quantum Storage (549.8B)"
     lore:
-      - "Can store an almost infinite number of items"
+      - "Can store 549,755,813,888 items"
       - ""
       - "Stores a large number of items in a quantum singularity"
-
   NTW_QUANTUM_STORAGE_13:
-    name: "Network Quantum Storage (8T)"
+    name: "Network Quantum Storage (8.8T)"
     lore:
-      - "Can store an almost infinite number of items"
+      - "Can store 8,796,093,022,208 items"
       - ""
       - "Stores a large number of items in a quantum singularity"
-
   NTW_QUANTUM_STORAGE_14:
-    name: "Network Quantum Storage (140T)"
+    name: "Network Quantum Storage (140.7T)"
     lore:
-      - "Can store an almost infinite number of items"
+      - "Can store 140,737,488,355,328 items"
       - ""
       - "Stores a large number of items in a quantum singularity"
-
   NTW_CAPACITOR_1:
     name: "Network Capacitor (1)"
     lore:
@@ -3881,6 +4655,300 @@ items:
     lore:
       - ""
 
+  NTW_EXPANSION_ANNOUNCEMENT_01:
+    name: "<color_random_string>Definitions"
+    lore:
+      - "<warning> 1) Statement refers to all statements provided here."
+      - "<warning> 2) Networks refers to a Slimefun addon, rather than the Internet, the Internet of Things, or other conventional meanings of a network."
+      - "<warning> 3) NetworksExpansion (hereafter \"NetworksExpansion\", \"this addon\", or \"this project\") is a Slimefun addon developed by the NetworksExpansion development team through additions, removals, and modifications to Networks in full compliance with GPLv3. It was developed for Paper 1.20.1 and the Chinese version of Slimefun, and is not fully compatible with Paper 1.20.5 and later."
+      - "<warning> 4) The NetworksExpansion developers (hereafter \"the development team\" or \"the creators\") are the people developing NetworksExpansion and are not owned by any company or organization."
+  NTW_EXPANSION_ANNOUNCEMENT_02:
+    name: "<color_random_string>NetworksExpansion Project Statement"
+    lore:
+      - "<warning> Please read the definitions before reading this statement."
+      - "<warning> 1) NetworksExpansion is completely free, shared, and open source on GitHub for supporters, maintainers, and creators to study and use."
+      - "<warning> 2) GPLv3 is the open-source license for NetworksExpansion. Anyone may freely use, modify, and distribute it, but all modifications and distributions must comply with GPLv3."
+      - "<warning> 3) \"NetworksExpansion\" is only the title of this document and carries no ambiguous or commercial implications."
+      - "<warning> 4) The developers act only as the creators of this addon, provide no commercial support, and no longer actively maintain it. They never participate directly or indirectly in operating any server."
+      - "<warning> 5) Using the above plugins or this addon to promote negative or violent information is strictly prohibited, as are illegal or infringing activities and any political or vulgar content."
+      - "<warning> 6) Reselling, including disguised transactions, unauthorized modification, and any profit-making use of the above files, is strictly prohibited."
+      - "<warning> 7) We strongly condemn these prohibited activities and encourage mutual oversight and reporting of violations or illegal conduct."
+      - "<warning> 8) Individuals or groups are responsible for all consequences of their own misuse. Responsibility must not be shifted to the maintainers or creators of the above plugins and configuration files."
+      - "<warning> 9) Depending on the circumstances, infringers shall bear civil liability such as ceasing infringement, removing its effects, apologizing, and compensating losses. Where public interests are also harmed, copyright authorities may order infringement to cease, confiscate illegal proceeds, confiscate and destroy infringing copies, and impose fines. Serious cases constituting crimes shall incur criminal liability under the law."
+      - "<warning> 10) A decision by the developers not to pursue infringement does not indicate approval of it or release the infringer from responsibility."
+      - "<warning> Please comply with the above statement."
+  NTW_EXPANSION_ANNOUNCEMENT_03:
+    name: "<color_random_string>NetworksExpansion Authors Statement"
+    lore:
+      - "<warning> Please read the NetworksExpansion usage statement before reading this statement."
+      - "<warning> 1) Members of the development team are citizens of the People's Republic of China, sincerely support socialism with Chinese characteristics, and uphold the leadership of the Communist Party of China."
+      - "<warning> 2) Members oppose capitalism, imperialism, hegemonism, feudalism, and other corrupt and backward ideologies."
+      - "<warning> 3) Members comply with the Constitution and laws and oppose online violence."
+      - "<warning> 4) Members follow community rules, communicate respectfully, and refrain from abusive language."
+      - "<warning> 5) Insults or attacks against the team or its members will be handled under the law. Doxxing and other online violence will be reported to the police."
+      - "<warning> 6) This statement represents only the development team, not other people, games, organizations, companies, countries, social groups, or any game's player community."
+      - "<warning> 7) This statement does not intend to favor any side and addresses matters rather than individuals."
+      - "<passive> This addon was written by Sefiraat, translated into Chinese by ybw0014, and expanded and maintained by yitoudaidai and tinalness."
+      - "<passive> Thanks to LogiTech machines for providing the author head hashes."
+      - "<passive> Thanks to all server owners who trusted and installed NetworksExpansion."
+      - "<passive> This addon was inspired by its players."
+      - "<passive> Special thanks to Utoboy, TouRuya, haiman233, matl114, and other players for their suggestions."
+      - "<passive> Thanks to Utoboy, TouRuya, haiman233, yitoudaidai, tinalness, matl114, lengshang, and other testers."
+  NTW_EXPANSION_ANNOUNCEMENT_04:
+    name: "<color_random_string>NetworksExpansion Related Links"
+    lore:
+      - "<warning> Please read the NetworksExpansion authors statement before reading this statement."
+      - "<passive> Official NetworksExpansion links follow (please use only these links):"
+      - "<passive> Build site: <click_info>https://builds.guizhanss.com/ytdd9527/NetworksExpansion/master/builds"
+      - "<passive> Stable GitHub repository: <click_info>https://github.com/ytdd9527/NetworksExpansion"
+      - "<passive> Stable GitHub Issues: <click_info>https://github.com/ytdd9527/NetworksExpansion/issues"
+      - "<passive> Stable GitHub pull requests: <click_info>https://github.com/ytdd9527/NetworksExpansion/pulls"
+      - "<passive> Development GitHub repository: <click_info>https://github.com/balugaq/NetworksExpansion"
+      - "<warning> The development version does not accept GitHub Issues"
+      - "<warning> The development version does not accept GitHub pull requests"
+      - "<passive> Author GitHub page: <click_info>https://github.com/ytdd9527"
+      - "<passive> Author GitHub page: <click_info>https://github.com/balugaq"
+  NTW_EXPANSION_ANNOUNCEMENT_05:
+    name: "<color_random_string>NetworksExpansion Related Links"
+    lore:
+      - "<warning> Please read the NetworksExpansion related questions and answers before reading this statement."
+      - "<warning> 1) Developers have no obligation to maintain this addon. Report unexpected errors, vulnerabilities, or problems with the stable version to its stable GitHub repository as an Issue."
+      - "<passive> 2) We cannot guarantee timely fixes for all problems, but will do our best."
+      - "<passive> 3) Be polite when communicating with developers. Malicious attacks and insults do not help resolve problems."
+      - "<warning> 4) Using, playing with, or modifying NetworksExpansion constitutes agreement to follow these statements."
+      - "<passive> 5) The developers reserve the right to modify or terminate this statement at any time."
+      - "<warning> 6) Review updates to this statement for objections. Generally, after a version update, the development team assumes you agree to comply with these statements."
+      - "<passive> 7) Avoid drawing NetworksExpansion, its development team, or its members into political or public incidents through your use of the addon.<warning> Otherwise the team may suspend or terminate maintenance."
+      - "<passive> 8) If developers publish this statement in other languages, the Chinese version takes precedence."
+      - "<passive> 9) The effectiveness, performance, interpretation, and dispute resolution of this statement are governed by the laws of mainland China, excluding conflict-of-laws rules."
+      - "<passive> 10) All headings are provided only for readability, have no independent substantive meaning, and cannot be used to interpret this statement."
+      - "<warning> 11) If any part of this statement is invalid for any reason, the remaining provisions remain valid and binding."
+      - "<warning> 12) If a small screen or another issue prevents viewing the complete statement, adjust your setup. The development team accepts no responsibility for this."
+      - "<warning> 13) Server owners or players must resolve any inability to view complete item names or descriptions due to screen size or other issues. The development team accepts no responsibility."
+      - "<warning> 14) Anyone may use, copy, modify, merge, publish, issue, display, or distribute this statement for non-profit purposes. Commercial use and promotion in the name of NetworksExpansion or its development team are prohibited."
+      - "<warning> 15) The developers retain the right to interpret all statements for this addon."
+  NTW_EXPANSION_CHAIN_GRABBER:
+    name: "Chain Grabber"
+    lore:
+      - "<passive>Pulls container items into the network along the selected direction"
+      - ""
+      - "<click_info>Click the distance slot with a held item<passive> to set distance from stack size"
+      - "<passive>Insert <gold>chain modules<passive> to expand functionality"
+  NTW_EXPANSION_CHAIN_PUSHER:
+    name: "Chain Pusher"
+    lore:
+      - "<passive>Pushes template items into containers along the selected direction"
+      - ""
+      - "<click_info>Template slots<passive> hold the items to push"
+      - "<passive>Insert <gold>chain modules<passive> to expand functionality"
+  NTW_EXPANSION_CHAIN_TRANSCEIVER:
+    name: "Chain Transceiver"
+    lore:
+      - "<passive>Pushes template items, then retrieves target items along the same line"
+      - ""
+      - "<click_info>Template slots<passive> hold the items to push"
+      - "<passive>Insert <gold>chain modules<passive> to expand functionality"
+  NTW_EXPANSION_CHAIN_MODULE_RANGE:
+    name: "Chain Range Module"
+    lore:
+      - "<passive>Increases chain machine transfer distance"
+      - ""
+      - "<passive>Each module adds <aqua>+16 blocks<passive>, up to 3 modules"
+      - "<click_info>Insert into a module slot<passive> to activate"
+  NTW_EXPANSION_CHAIN_MODULE_CAPACITY:
+    name: "Chain Capacity Module"
+    lore:
+      - "<passive>Adds template slots to pushers / transceivers"
+      - ""
+      - "<passive>Each module adds <aqua>+3 slots<passive>, up to 2 modules"
+      - "<error>Grabbers have no template slots; this module has no effect"
+  NTW_EXPANSION_CHAIN_MODULE_MODE:
+    name: "Chain Mode Module"
+    lore:
+      - "<passive>Unlocks transfer mode switching"
+      - ""
+      - "<click_info>Insert into a module slot<passive> to activate"
+      - "<click_info>Click the mode slot<passive> with left/right click to switch"
+  NTW_EXPANSION_CHAIN_MODULE_VANILLA:
+    name: "Chain Vanilla Container Module"
+    lore:
+      - "<passive>Allows chain machines to recognize vanilla containers"
+      - ""
+      - "<click_info>Insert into a module slot<passive> to activate"
+  NTW_EXPANSION_CHAIN_MODULE_MULTI_DIRECTION:
+    name: "Chain Multi-Direction Module"
+    lore:
+      - "<passive>Allows chain machines to transfer in multiple directions at once"
+      - ""
+      - "<click_info>Click a direction slot<passive> to add or remove a direction"
+  NTW_EXPANSION_CHAIN_MODULE_BINDING:
+    name: "Chain Binding Module"
+    lore:
+      - "<passive>Insert into a pusher / transceiver to unlock <gold>per-container supply<passive>"
+      - "<passive>Assign a separate supply list to each container on the line"
+      - ""
+      - "<click_info>Insert into a module slot<passive> to activate · Settings persist when removed"
+  NTW_EXPANSION_CHAIN_CONFIGURATOR:
+    name: "Chain Configurator"
+    lore:
+      - "<passive>Copy an entire line · Transfer settings with one click"
+      - ""
+      - "<gold>[Left click]<aqua> Source machine · Copy direction settings"
+      - "<gold>[Right click]<aqua> Target machine · Apply by distance"
+      - "<gold>[Shift+Swing in air]<aqua> Clear saved settings"
+      - "<passive>Sneak while applying to copy lists without mode settings"
+  NTW_EXPANSION_CHAIN_BRUSH:
+    name: "Chain Supply Brush"
+    lore:
+      - "<passive>Edit with a click · Configure supply remotely"
+      - ""
+      - "<gold>[Right click]<aqua> Machine on the line · Open its supply list"
+      - "<gold>[Shift+Right click]<aqua> Machine on the line · Clear its supply list"
+      - "<gold>[Right click]<aqua> Pusher · Open direction page"
+      - "<passive>Right click a direction on that page to bulk edit the entire direction"
+  NTW_EXPANSION_RUNE_COLLECT:
+    name: "Network Rune"
+    lore:
+      - "<passive>Drop beside a sword, pickaxe, axe, hoe, or shovel to apply"
+      - "<success>Drops from kills and mining go directly into the bound network"
+      - ""
+      - "<click_info>Sneak+Right click a controller<passive> to bind the network"
+      - "<click_info>Sneak+Right click air<passive> to change mode"
+  NTW_EXPANSION_VISUAL_GRID:
+    name: "Interactive Grid"
+    lore:
+      - "View all items in the network interactively"
+      - "Insert or retrieve items directly"
+      - "Supports custom keybinds"
+      - "Sorting modes: "
+      - "&eAZ&7: &eSort alphabetically"
+      - "&eAmount&7: &eSort by item quantity"
+      - "&eReverse Amount&7: &eSort by item quantity in reverse order"
+      - "&eAddon&7: &eSort alphabetically by item addon"
+      - "Supports Pinyin search"
+  NTW_EXPANSION_LINKER_GRID:
+    name: "Logic Linker Grid"
+    lore:
+      - "&eEasily retrieve hyperlinks/quantum entanglement singularities"
+      - "Sorting modes: "
+      - "&eAZ&7: &eSort alphabetically"
+      - "&eAmount&7: &eSort by item quantity"
+      - "&eReverse Amount&7: &eSort by item quantity in reverse order"
+      - "&eAddon&7: &eSort alphabetically by item addon"
+      - "Supports Pinyin search"
+  NTW_EXPANSION_CELL_DRIVE:
+    name: "Cell Drive"
+    lore:
+      - "<passive>Insert storage cells to make their contents available to the network"
+      - ""
+      - "<click_info>Right click<passive> to open the drive"
+      - "<click_info>Right click a cell slot with an empty hand<passive> to view its contents"
+  NTW_EXPANSION_CELL_CLEANER:
+    name: "Cell Cleaner"
+    lore:
+      - "<passive>Delete unwanted items from a cell in bulk"
+      - ""
+      - "<click_info>Insert a cell<passive> · <click_info>Shift+Click an item<passive> to delete it"
+      - "<error>Deletes all items of that type; cannot be undone"
+  NTW_EXPANSION_CELL_CONVERTER:
+    name: "Cell Transfer Machine"
+    lore:
+      - "<passive>Transfers items between storage cells and quantum storage"
+      - ""
+      - "<click_info>Click an item<passive> to export it into quantum storage"
+      - "<click_info>Switch mode<passive> to transfer back into the cell"
+      - "<success>Import empty quantum storage of the same tier to add +1 item type to the cell"
+  NTW_EXPANSION_CELL:
+    name: "Storage Cell {0}"
+    lore:
+      - "<passive>Each item type uses one unit · Capacity per unit <aqua>{0}"
+      - ""
+      - "<click_info>Right click<passive> to view contents · Upgrade units"
+      - "<passive>Insert into a <gold>Cell Drive<passive> to connect to the network"
+  NTW_EXPANSION_CELL_INFINITY:
+    name: "Infinite Cell ∞"
+    lore:
+      - "<passive>Unlimited capacity per unit · Unlimited units · No upgrades needed"
+      - ""
+      - "<click_info>Right click<passive> to view contents"
+      - "<passive>Insert into a <gold>Cell Drive<passive> to connect to the network"
+  NTW_EXPANSION_ASSEMBLY_DRIVE:
+    name: "Assembly Drive"
+    lore:
+      - "<passive>Insert assembly cards for automatic production · Stops when full"
+      - ""
+      - "<click_info>Left/Right click<passive> to adjust speed"
+      - "<click_info>Shift+Left click<passive> to change mode · <click_info>Shift+Right click<passive> to set a plan"
+  NTW_EXPANSION_VOID_CELL:
+    name: "Void Cell"
+    lore:
+      - "<passive>Destroys matching items to handle network overflow"
+      - ""
+      - "<click_info>Right click<passive> to configure the filter"
+      - "<error>Cannot be inserted into an ender drive"
+  NTW_EXPANSION_ENDER_DRIVE:
+    name: "Ender Drive"
+    lore:
+      - "<passive>Ender drives on the same channel share cells"
+      - ""
+      - "<click_info>Right click<passive> to bind a channel · <click_info>Sneak+Right click<passive> to copy"
+      - "<click_info>Click the center slot<passive> to unbind"
+  NTW_EXPANSION_ASSEMBLY_CARD:
+    name: "Assembly Card"
+    lore:
+      - "<passive>Records a recipe for production in an assembly drive"
+      - ""
+      - "<click_info>Use an assembly workshop<passive> to encode a recipe"
+  NTW_EXPANSION_ASSEMBLY_WORKSHOP:
+    name: "Assembly Workshop"
+    lore:
+      - "<passive>Consumes materials to encode a recipe onto an assembly card"
+      - ""
+      - "<click_info>Left click<passive> to encode once · <click_info>Shift+Left click<passive> to encode repeatedly"
+      - "<click_info>Insert an encoded card<passive> to clear it and recover materials"
+  NTW_EXPANSION_CONTAINER_FILLER:
+    name: "Automatic Container Filler"
+    lore:
+      - "<passive>Loads network items into storage containers and outputs them when full"
+      - "<passive>Supports <aqua>Shulker Boxes <passive>/ <aqua>Storage Cells <passive>/ <aqua>Quantum Storage <passive>/ <aqua>Network Drawers"
+      - ""
+      - "<click_info>List area<passive> for items to load · <click_info>Container area<passive> for containers"
+      - "<passive>If network stock is low, outputs available amounts without waiting"
+  NTW_EXPANSION_CHANNEL_CONFIGURATOR:
+    name: "Channel Configurator"
+    lore:
+      - "<passive>Configures channels for ender drives"
+      - ""
+      - "<click_info>Right click<passive> to bind; creates a channel if none exists"
+      - "<click_info>Sneak+Right click<passive> to copy / clear the channel"
+  NTW_EXPANSION_OVERCLOCK_CORE:
+    name: "Overclock Core"
+    lore:
+      - "<passive>Unlocks full-load speed for assembly drives"
+      - ""
+      - "<click_info>Insert into the upgrade slot<passive> to activate"
+  NTW_EXPANSION_SMART_CORE:
+    name: "Smart Core"
+    lore:
+      - "<passive>Includes bound channel stock when checking replenishment"
+      - ""
+      - "<click_info>Insert into the smart slot<passive> to activate"
+      - "<click_info>Click the smart slot with a channel configurator<passive> to bind a channel"
+  NTW_EXPANSION_ASSEMBLY_MONITOR:
+    name: "Assembly Monitor"
+    lore:
+      - "<passive>View all assembly drives in the network"
+      - ""
+      - "<click_info>Click<passive> to pause / resume remotely"
+      - "<passive>Supports naming and searching"
+  NTW_EXPANSION_DRIVE_MONITOR:
+    name: "Drive Monitor"
+    lore:
+      - "<passive>View all cell drives in the same network"
+      - ""
+      - "<click_info>Left click<passive> to open remotely · <click_info>Right click<passive> for arrow guidance"
+      - "<click_info>Shift+Left click<passive> to rename · <click_info>Shift+Right click<passive> to clear"
+      - "<passive>Supports searching by name / coordinates"
 displays:
   quantum_storage:
     void_excess: "<click_info>Void Excess Input: <passive>%s"
@@ -3921,6 +4989,7 @@ groups:
       sub_menu_author: "<color_random_string>Contributions - Authors"
       sub_menu_announce: "<color_random_string>Contributions - Announcements"
       sub_menu_deprecated: "<color_random_string>Deprecated Items"
+      sub_menu_cellnet: "<color_random_string>Cargo & Storage - Cell Storage"
 theme:
   gold: ""
   white: ""

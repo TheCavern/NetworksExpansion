@@ -1,46 +1,45 @@
 package com.balugaq.netex.api.data;
 
+import io.github.sefiraat.networks.network.stackcaches.ItemStackCache;
 import io.github.sefiraat.networks.utils.StackUtils;
-import io.github.thebusybiscuit.slimefun4.utils.itemstack.ItemStackWrapper;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
-public class ItemContainer {
+@ToString
+public class ItemContainer extends ItemStackCache {
 
     private final int id;
-    private final @NotNull ItemStack sample;
 
     @Getter
-    private final @NotNull ItemStackWrapper wrapper;
+    private volatile int amount;
 
-    @Setter
-    @Getter
-    private int amount;
+    public synchronized void setAmount(int amount) {
+        this.amount = amount;
+    }
 
     public ItemContainer(int id, @NotNull ItemStack item, int amount) {
+        super(StackUtils.getAsQuantity(item, 1));
         this.id = id;
-        this.sample = item.clone();
-        sample.setAmount(1);
-        this.wrapper = ItemStackWrapper.wrap(sample);
         this.amount = amount;
     }
 
     public @NotNull ItemStack getSample() {
-        return sample.clone();
+        return itemStack.clone();
     }
 
     public @NotNull ItemStack getSampleDirectly() {
-        return sample;
+        return itemStack;
     }
 
     public boolean isSimilar(ItemStack other) {
-        return StackUtils.itemsMatch(wrapper, other);
+        return StackUtils.itemsMatch(this, other);
     }
 
-    public void addAmount(int amount) {
+    public synchronized void addAmount(int amount) {
         this.amount += amount;
     }
 
@@ -50,7 +49,7 @@ public class ItemContainer {
      * @param amount: amount will be removed
      * @return amount that actual removed
      */
-    public int removeAmount(int amount) {
+    public synchronized int removeAmount(int amount) {
         if (this.amount > amount) {
             this.amount -= amount;
             return amount;
@@ -59,13 +58,5 @@ public class ItemContainer {
             this.amount = 0;
             return re;
         }
-    }
-
-    public @NotNull String toString() {
-        return "ItemContainer{" + "id="
-            + id + ", sample="
-            + sample + ", wrapper="
-            + wrapper + ", amount="
-            + amount + '}';
     }
 }

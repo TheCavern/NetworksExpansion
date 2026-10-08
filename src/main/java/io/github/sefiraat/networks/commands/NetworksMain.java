@@ -9,53 +9,34 @@ import com.balugaq.netex.utils.Lang;
 import com.balugaq.netex.utils.MapUtil;
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
-import com.ytdd9527.networksexpansion.core.items.unusable.AbstractBlueprint;
+import com.ytdd9527.networksexpansion.core.items.unusable.Blueprint;
+import com.ytdd9527.networksexpansion.implementation.machines.cellnet.collect.CollectService;
+import com.ytdd9527.networksexpansion.implementation.machines.cellnet.converter.CellQuantumConverter;
 import com.ytdd9527.networksexpansion.implementation.machines.unit.NetworksDrawer;
-import com.ytdd9527.networksexpansion.utils.ParticleUtil;
-import com.ytdd9527.networksexpansion.utils.WorldUtils;
-import com.ytdd9527.networksexpansion.utils.itemstacks.ItemStackUtil;
-import io.github.bakedlibs.dough.collections.Pair;
-import io.github.bakedlibs.dough.skins.PlayerHead;
-import io.github.bakedlibs.dough.skins.PlayerSkin;
-import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.network.NetworkRoot;
 import io.github.sefiraat.networks.network.stackcaches.BlueprintInstance;
 import io.github.sefiraat.networks.network.stackcaches.ItemRequest;
 import io.github.sefiraat.networks.network.stackcaches.QuantumCache;
+import io.github.sefiraat.networks.slimefun.NetworksSlimefunItemStacks;
 import io.github.sefiraat.networks.slimefun.network.AdminDebuggable;
 import io.github.sefiraat.networks.slimefun.network.NetworkQuantumStorage;
 import io.github.sefiraat.networks.utils.Keys;
 import io.github.sefiraat.networks.utils.StackUtils;
 import io.github.sefiraat.networks.utils.datatypes.DataTypeMethods;
-import io.github.sefiraat.networks.utils.datatypes.PersistentCraftingBlueprintType;
 import io.github.sefiraat.networks.utils.datatypes.PersistentQuantumStorageType;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.core.attributes.NotPlaceable;
-import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
-import io.github.thebusybiscuit.slimefun4.core.handlers.BlockPlaceHandler;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
-import io.github.thebusybiscuit.slimefun4.libraries.dough.blocks.ChunkPosition;
-import io.github.thebusybiscuit.slimefun4.libraries.paperlib.PaperLib;
+import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
-import net.guizhanss.guizhanlib.minecraft.helper.inventory.ItemStackHelper;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Particle;
-import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.map.MapView;
@@ -64,111 +45,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"deprecation", "DuplicatedCode"})
 public class NetworksMain implements TabExecutor {
-    @Deprecated
-    private static final Set<UUID> requesters = new ConcurrentSkipListSet<>();
-
-    @Deprecated
-    private static final Networks javaPlugin = Networks.getInstance();
-
-    @Deprecated
-    private static final Map<UUID, Pair<Location, Location>> SELECTED_POS = new HashMap<>();
-
     public NetworksMain() {
-        javaPlugin
-            .getServer()
-            .getScheduler()
-            .runTaskTimerAsynchronously(
-                javaPlugin,
-                () -> {
-                    for (UUID uuid : requesters) {
-                        Player player = Bukkit.getPlayer(uuid);
-                        if (player == null) {
-                            continue;
-                        }
-                        handleSelectedAreaOutlineShowRequest(player);
-                    }
-                },
-                0,
-                Slimefun.getTickerTask().getTickRate());
     }
 
-    @Deprecated
-    public static @Nullable Location getPos1(@NotNull Player p) {
-        if (SELECTED_POS.get(p.getUniqueId()) == null) {
-            return null;
-        }
-
-        return SELECTED_POS.get(p.getUniqueId()).getFirstValue();
-    }
-
-    @Deprecated
-    public static @Nullable Location getPos2(@NotNull Player p) {
-        if (SELECTED_POS.get(p.getUniqueId()) == null) {
-            return null;
-        }
-        return SELECTED_POS.get(p.getUniqueId()).getSecondValue();
-    }
-
-    @Deprecated
-    public static void setPos1(@NotNull Player p, Location pos) {
-        SELECTED_POS.put(p.getUniqueId(), new Pair<>(pos, getPos2(p)));
-    }
-
-    @Deprecated
-    public static void setPos2(@NotNull Player p, Location pos) {
-        SELECTED_POS.put(p.getUniqueId(), new Pair<>(getPos1(p), pos));
-    }
-
-    @Deprecated
-    public static void clearPos(@NotNull Player p) {
-        SELECTED_POS.remove(p.getUniqueId());
-        p.sendMessage(Lang.getString("messages.commands.clear-selected-pos"));
-    }
-
-    @Deprecated
-    public static void toggleShowSelectedAreaOutline(@NotNull Player p) {
-        if (requesters.contains(p.getUniqueId())) {
-            requesters.remove(p.getUniqueId());
-            p.sendMessage(Lang.getString("messages.commands.selected-area-outline-hide-request"));
-        } else {
-            requesters.add(p.getUniqueId());
-            p.sendMessage(Lang.getString("messages.commands.selected-area-outline-show-request"));
-        }
-    }
-
-    @Deprecated
-    private static void handleSelectedAreaOutlineShowRequest(@NotNull Player p) {
-        Location pos1 = getPos1(p);
-        Location pos2 = getPos2(p);
-        if (pos1 == null || pos2 == null) {
-            return;
-        }
-
-        javaPlugin
-            .getServer()
-            .getScheduler()
-            .runTaskLaterAsynchronously(
-                javaPlugin,
-                () -> ParticleUtil.drawRegionOutline(javaPlugin, Particle.WAX_OFF, 0, pos1, pos2),
-                Slimefun.getTickerTask().getTickRate());
-    }
-
-    @Deprecated
     public static @NotNull String locationToString(@Nullable Location l) {
         if (l == null) {
             return Lang.getString("icons.drawer.location_error.unknown");
@@ -177,42 +63,6 @@ public class NetworksMain implements TabExecutor {
             return Lang.getString("icons.drawer.location_error.unknown");
         }
         return l.getWorld().getName() + "," + l.getBlockX() + "," + l.getBlockY() + "," + l.getBlockZ();
-    }
-
-    @Deprecated
-    public static long locationRange(@Nullable Location pos1, @Nullable Location pos2) {
-        if (pos1 == null || pos2 == null) {
-            return 0;
-        }
-
-        final int downX = Math.min(pos1.getBlockX(), pos2.getBlockX());
-        final int upX = Math.max(pos1.getBlockX(), pos2.getBlockX());
-        final int downY = Math.min(pos1.getBlockY(), pos2.getBlockY());
-        final int upY = Math.max(pos1.getBlockY(), pos2.getBlockY());
-        final int downZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
-        final int upZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
-        return (long) (Math.abs(upX - downX) + 1) * (Math.abs(upY - downY) + 1) * (Math.abs(upZ - downZ) + 1);
-    }
-
-    @Deprecated
-    private static void doWorldEdit(
-        @Nullable Location pos1, @Nullable Location pos2, @NotNull Consumer<Location> consumer) {
-        if (pos1 == null || pos2 == null) {
-            return;
-        }
-        final int downX = Math.min(pos1.getBlockX(), pos2.getBlockX());
-        final int upX = Math.max(pos1.getBlockX(), pos2.getBlockX());
-        final int downY = Math.min(pos1.getBlockY(), pos2.getBlockY());
-        final int upY = Math.max(pos1.getBlockY(), pos2.getBlockY());
-        final int downZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
-        final int upZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
-        for (int x = downX; x <= upX; x++) {
-            for (int y = downY; y <= upY; y++) {
-                for (int z = downZ; z <= upZ; z++) {
-                    consumer.accept(new Location(pos1.getWorld(), x, y, z));
-                }
-            }
-        }
     }
 
     public static void viewLog(@NotNull Player player) {
@@ -330,7 +180,7 @@ public class NetworksMain implements TabExecutor {
         }
 
         clone.setAmount(amount);
-        data.depositItemStack(clone, false);
+        data.depositItemStack0(player.getLocation(), clone, false);
         NetworksDrawer.setStorageData(targetLocation, data);
         player.sendMessage(Lang.getString("messages.commands.updated-drawer"));
     }
@@ -374,7 +224,7 @@ public class NetworksMain implements TabExecutor {
         }
 
         clone.setAmount(1);
-        data.requestItem(new ItemRequest(clone, amount));
+        data.requestItem0(player.getLocation(), new ItemRequest(clone, amount));
         NetworksDrawer.setStorageData(targetLocation, data);
         player.sendMessage(Lang.getString("messages.commands.updated-drawer"));
     }
@@ -405,449 +255,6 @@ public class NetworksMain implements TabExecutor {
             Lang.getString("messages.commands.set-container-id"), locationToString(location), containerId));
     }
 
-    @Deprecated
-    public static void worldeditPos1(@NotNull Player player) {
-        Block targetBlock = player.getTargetBlockExact(8, FluidCollisionMode.NEVER);
-        if (targetBlock == null) {
-            targetBlock = player.getLocation().getBlock();
-        }
-
-        worldeditPos1(player, targetBlock.getLocation());
-    }
-
-    @Deprecated
-    public static void worldeditPos1(@NotNull Player player, Location location) {
-        setPos1(player, location);
-        if (getPos2(player) == null) {
-            player.sendMessage(String.format(
-                Lang.getString("messages.commands.worldedit.set-pos1"), locationToString(getPos1(player))));
-        } else {
-            player.sendMessage(String.format(
-                Lang.getString("messages.commands.worldedit.set-pos1-with-blocks"),
-                locationToString(getPos1(player)),
-                locationRange(getPos1(player), getPos2(player))));
-        }
-    }
-
-    @Deprecated
-    public static void worldeditPos2(@NotNull Player player) {
-        Block targetBlock = player.getTargetBlockExact(8, FluidCollisionMode.NEVER);
-        if (targetBlock == null) {
-            targetBlock = player.getLocation().getBlock();
-        }
-
-        worldeditPos2(player, targetBlock.getLocation());
-    }
-
-    @Deprecated
-    public static void worldeditPos2(@NotNull Player player, Location location) {
-        setPos2(player, location);
-        if (getPos1(player) == null) {
-            player.sendMessage(String.format(
-                Lang.getString("messages.commands.worldedit.set-pos2"), locationToString(getPos2(player))));
-        } else {
-            player.sendMessage(String.format(
-                Lang.getString("messages.commands.worldedit.set-pos2-with-blocks"),
-                locationToString(getPos1(player)),
-                locationRange(getPos1(player), getPos2(player))));
-        }
-    }
-
-    @Deprecated
-    public static void worldeditClone(@NotNull Player player) {
-        worldeditClone(player, false);
-    }
-
-    @Deprecated
-    @SuppressWarnings("UnstableApiUsage")
-    public static void worldeditClone(@NotNull Player player, boolean overrideData) {
-        Location pos1 = getPos1(player);
-        Location pos2 = getPos2(player);
-        if (pos1 == null || pos2 == null) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-range"));
-            return;
-        }
-
-        World w1 = pos1.getWorld();
-        World w2 = pos2.getWorld();
-        if (w1 == null || w2 == null) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-range"));
-            return;
-        }
-
-        if (!Objects.equals(w1.getUID(), w2.getUID())) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-same-world"));
-            return;
-        }
-
-        player.sendMessage(String.format(
-            Lang.getString("messages.commands.worldedit.pasting-block"),
-            locationToString(getPos1(player)),
-            locationToString(getPos2(player))));
-        final long currentMillSeconds = System.currentTimeMillis();
-
-        final AtomicInteger count = new AtomicInteger();
-        final Location playerLocation = player.getLocation();
-        final ItemStack itemInHand = player.getItemInHand();
-
-        final int dx = playerLocation.getBlockX() - pos1.getBlockX();
-        final int dy = playerLocation.getBlockY() - pos1.getBlockY();
-        final int dz = playerLocation.getBlockZ() - pos1.getBlockZ();
-
-        final Map<ChunkPosition, Set<Location>> tickingBlocks =
-            Slimefun.getTickerTask().getLocations();
-
-        Bukkit.getScheduler().runTask(Networks.getInstance(), () -> {
-            doWorldEdit(getPos1(player), getPos2(player), (fromLocation -> {
-                final Block fromBlock = fromLocation.getBlock();
-                final Block toBlock = playerLocation
-                    .getWorld()
-                    .getBlockAt(
-                        fromLocation.getBlockX() + dx,
-                        fromLocation.getBlockY() + dy,
-                        fromLocation.getBlockZ() + dz);
-                final SlimefunItem slimefunItem = StorageCacheUtils.getSfItem(fromLocation);
-                final Location toLocation = toBlock.getLocation();
-
-                // Block Data
-                WorldUtils.copyBlockState(PaperLib.getBlockState(fromBlock, false).getState(), toBlock);
-
-                // Count means successful pasting block data. Not including Slimefun data.
-                count.addAndGet(1);
-
-                // Slimefun Data
-                if (slimefunItem == null) {
-                    return;
-                }
-
-                // Call Handler
-                slimefunItem.callItemHandler(
-                    BlockPlaceHandler.class,
-                    handler -> handler.onPlayerPlace(new BlockPlaceEvent(
-                        toBlock,
-                        PaperLib.getBlockState(toBlock, false).getState(),
-                        toBlock.getRelative(BlockFace.SOUTH),
-                        itemInHand,
-                        player,
-                        true,
-                        EquipmentSlot.HAND)));
-
-                SlimefunBlockData fromSlimefunBlockData =
-                    Slimefun.getDatabaseManager().getBlockDataController().getBlockData(fromLocation);
-                if (overrideData) {
-                    Slimefun.getDatabaseManager().getBlockDataController().removeBlock(toLocation);
-                }
-
-                boolean ticking = false;
-                ChunkPosition chunkPosition = new ChunkPosition(fromLocation);
-                if (tickingBlocks.containsKey(chunkPosition)) {
-                    if (tickingBlocks.get(chunkPosition).contains(fromLocation)) {
-                        ticking = true;
-                    }
-                }
-
-                if (StorageCacheUtils.hasBlock(toLocation)) {
-                    return;
-                }
-
-                // Slimefun Block
-                Slimefun.getDatabaseManager().getBlockDataController().createBlock(toLocation, slimefunItem.getId());
-                SlimefunBlockData toSlimefunBlockData =
-                    Slimefun.getDatabaseManager().getBlockDataController().getBlockData(toLocation);
-
-                // SlimefunBlockData
-                if (fromSlimefunBlockData == null || toSlimefunBlockData == null) {
-                    return;
-                }
-
-                Map<String, String> data = fromSlimefunBlockData.getAllData();
-                for (String key : data.keySet()) {
-                    toSlimefunBlockData.setData(key, data.get(key));
-                }
-
-                // BlockMenu
-                final BlockMenu fromMenu = fromSlimefunBlockData.getBlockMenu();
-                final BlockMenu toMenu = toSlimefunBlockData.getBlockMenu();
-
-                if (fromMenu == null || toMenu == null) {
-                    return;
-                }
-
-                ItemStack[] contents = fromMenu.getContents();
-                for (int i = 0; i < contents.length; i++) {
-                    if (contents[i] != null) {
-                        toMenu.getInventory().setItem(i, contents[i].clone());
-                    }
-                }
-
-                // Ticking
-                if (!ticking) {
-                    Slimefun.getTickerTask().disableTicker(toLocation);
-                }
-            }));
-            player.sendMessage(String.format(
-                Lang.getString("messages.commands.worldedit.paste-done"),
-                count,
-                System.currentTimeMillis() - currentMillSeconds));
-        });
-    }
-
-    @Deprecated
-    public static void worldeditPaste(@NotNull Player player, @NotNull String sfid) {
-        worldeditPaste(player, sfid, false, false);
-    }
-
-    @Deprecated
-    public static void worldeditPaste(@NotNull Player player, @NotNull String sfid, boolean overrideData) {
-        worldeditPaste(player, sfid, overrideData, false);
-    }
-
-    @Deprecated
-    @SuppressWarnings("UnstableApiUsage")
-    public static void worldeditPaste(
-        @NotNull Player player, @NotNull String sfid, boolean overrideData, boolean force) {
-        final SlimefunItem sfItem = SlimefunItem.getById(sfid);
-
-        Location pos1 = getPos1(player);
-        Location pos2 = getPos2(player);
-        if (pos1 == null || pos2 == null) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-range"));
-            return;
-        }
-
-        if (!Objects.equals(pos1.getWorld().getUID(), pos2.getWorld().getUID())) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-same-world"));
-            return;
-        }
-
-        if (sfItem == null) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.invalid-slimefun-block-id"));
-            return;
-        }
-
-        if (!sfItem.getItem().getType().isBlock()) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.invalid-slimefun-block-id"));
-            return;
-        }
-
-        if (sfItem.getItem().getType() == Material.AIR) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.not-a-placeable-block"));
-            return;
-        }
-
-        if (!force && sfItem instanceof NotPlaceable) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.not-placeable-block"));
-            return;
-        }
-
-        player.sendMessage(String.format(
-            Lang.getString("messages.commands.worldedit.pasting-block"),
-            locationToString(getPos1(player)),
-            locationToString(getPos2(player))));
-        final long currentMillSeconds = System.currentTimeMillis();
-
-        final AtomicInteger count = new AtomicInteger();
-        final Material t = sfItem.getItem().getType();
-        final ItemStack itemStack = sfItem.getItem();
-        PlayerSkin skin0 = null;
-        boolean isHead0 = false;
-        final PlayerSkin skin;
-        final boolean isHead;
-        if (itemStack.getType() == Material.PLAYER_HEAD || itemStack.getType() == Material.PLAYER_WALL_HEAD) {
-            if (itemStack instanceof SlimefunItemStack sfis) {
-                Optional<String> texture = sfis.getSkullTexture();
-                if (texture.isPresent()) {
-                    skin0 = PlayerSkin.fromBase64(texture.get());
-                    isHead0 = true;
-                }
-            }
-        }
-        skin = skin0;
-        isHead = isHead0;
-
-        doWorldEdit(getPos1(player), getPos2(player), (location -> {
-            final Block targetBlock = location.getBlock();
-            sfItem.callItemHandler(
-                BlockPlaceHandler.class,
-                h -> h.onPlayerPlace(new BlockPlaceEvent(
-                    targetBlock,
-                    PaperLib.getBlockState(targetBlock, false).getState(),
-                    targetBlock.getRelative(BlockFace.DOWN),
-                    itemStack,
-                    player,
-                    true,
-                    EquipmentSlot.HAND)));
-            if (overrideData) {
-                Slimefun.getDatabaseManager().getBlockDataController().removeBlock(location);
-            }
-            if (!StorageCacheUtils.hasBlock(location)) {
-                targetBlock.setType(t);
-                if (isHead) {
-                    PlayerHead.setSkin(targetBlock, skin, false);
-                }
-                Slimefun.getDatabaseManager().getBlockDataController().createBlock(location, sfid);
-            }
-            count.addAndGet(1);
-        }));
-
-        player.sendMessage(String.format(
-            Lang.getString("messages.commands.worldedit.paste-done"),
-            count,
-            System.currentTimeMillis() - currentMillSeconds));
-    }
-
-    @Deprecated
-    public static void worldeditClear(@NotNull Player player, boolean callHandler, boolean skipVanilla) {
-        Location pos1 = getPos1(player);
-        Location pos2 = getPos2(player);
-        if (pos1 == null || pos2 == null) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-range"));
-            return;
-        }
-
-        if (!Objects.equals(pos1.getWorld().getUID(), pos2.getWorld().getUID())) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-same-world"));
-            return;
-        }
-
-        player.sendMessage(String.format(
-            Lang.getString("messages.commands.worldedit.clearing-area"),
-            locationToString(getPos1(player)),
-            locationToString(getPos2(player))));
-        final long currentMillSeconds = System.currentTimeMillis();
-
-        final AtomicInteger count = new AtomicInteger();
-        doWorldEdit(getPos1(player), getPos2(player), (location -> {
-            final Block targetBlock = pos1.getWorld().getBlockAt(location);
-            if (StorageCacheUtils.hasBlock(location)) {
-                SlimefunItem item = StorageCacheUtils.getSfItem(location);
-                if (item != null && callHandler) {
-                    item.callItemHandler(
-                        BlockBreakHandler.class,
-                        handler -> handler.onPlayerBreak(
-                            new BlockBreakEvent(targetBlock, player),
-                            new ItemStack(Material.AIR),
-                            new ArrayList<>()));
-                }
-                targetBlock.setType(Material.AIR);
-            }
-            Slimefun.getDatabaseManager().getBlockDataController().removeBlock(location);
-            if (!skipVanilla) {
-                targetBlock.setType(Material.AIR);
-            }
-            count.addAndGet(1);
-        }));
-
-        player.sendMessage(String.format(
-            Lang.getString("messages.commands.worldedit.clear-done"),
-            count,
-            System.currentTimeMillis() - currentMillSeconds));
-    }
-
-    @Deprecated
-    public static void worldeditBlockMenuSetSlot(@NotNull Player player, int slot) {
-        Location pos1 = getPos1(player);
-        Location pos2 = getPos2(player);
-        if (pos1 == null || pos2 == null) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-range"));
-            return;
-        }
-
-        if (!Objects.equals(pos1.getWorld().getUID(), pos2.getWorld().getUID())) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-same-world"));
-            return;
-        }
-
-        if (!(0 <= slot && slot <= 53)) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.invalid-slot"));
-            return;
-        }
-
-        final ItemStack hand = player.getInventory().getItemInMainHand();
-
-        player.sendMessage(String.format(
-            Lang.getString("messages.commands.worldedit.set-slot"), slot, ItemStackHelper.getDisplayName(hand)));
-        final long currentMillSeconds = System.currentTimeMillis();
-
-        final AtomicInteger count = new AtomicInteger();
-        doWorldEdit(getPos1(player), getPos2(player), (location -> {
-            final BlockMenu menu = StorageCacheUtils.getMenu(location);
-            if (menu != null) {
-                menu.replaceExistingItem(slot, hand);
-            }
-            count.addAndGet(1);
-        }));
-
-        final String itemName = ItemStackHelper.getDisplayName(hand);
-        player.sendMessage(String.format(
-            Lang.getString("messages.commands.worldedit.set-slot-done"),
-            slot,
-            itemName,
-            System.currentTimeMillis() - currentMillSeconds));
-    }
-
-    @Deprecated
-    public static void worldeditBlockInfoAdd(@NotNull Player player, @NotNull String key, @NotNull String value) {
-        Location pos1 = getPos1(player);
-        Location pos2 = getPos2(player);
-        if (pos1 == null || pos2 == null) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-range"));
-            return;
-        }
-
-        if (!Objects.equals(pos1.getWorld().getUID(), pos2.getWorld().getUID())) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-same-world"));
-            return;
-        }
-
-        player.sendMessage(String.format(Lang.getString("messages.commands.worldedit.setting-info"), key, value));
-        final long currentMillSeconds = System.currentTimeMillis();
-
-        final AtomicInteger count = new AtomicInteger();
-        doWorldEdit(getPos1(player), getPos2(player), (location -> {
-            if (StorageCacheUtils.getBlock(location) != null) {
-                StorageCacheUtils.setData(location, key, value);
-                count.addAndGet(1);
-            }
-        }));
-
-        player.sendMessage(String.format(
-            Lang.getString("messages.commands.worldedit.set-info-done"),
-            key,
-            value,
-            System.currentTimeMillis() - currentMillSeconds));
-    }
-
-    @Deprecated
-    public static void worldeditBlockInfoRemove(@NotNull Player player, @NotNull String key) {
-        Location pos1 = getPos1(player);
-        Location pos2 = getPos2(player);
-        if (pos1 == null || pos2 == null) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-range"));
-            return;
-        }
-
-        if (!Objects.equals(pos1.getWorld().getUID(), pos2.getWorld().getUID())) {
-            player.sendMessage(Lang.getString("messages.commands.worldedit.must-select-same-world"));
-            return;
-        }
-
-        player.sendMessage(String.format(Lang.getString("messages.commands.worldedit.removing-info"), key));
-        final long currentMillSeconds = System.currentTimeMillis();
-
-        final AtomicInteger count = new AtomicInteger();
-        doWorldEdit(getPos1(player), getPos2(player), (location -> {
-            if (StorageCacheUtils.getBlock(location) != null) {
-                StorageCacheUtils.removeData(location, key);
-                count.addAndGet(1);
-            }
-        }));
-        player.sendMessage(String.format(
-            Lang.getString("messages.commands.worldedit.removing-info"),
-            key,
-            System.currentTimeMillis() - currentMillSeconds));
-    }
-
     private static void updateItem(@NotNull Player player) {
         final ItemStack itemInHand = player.getInventory().getItemInMainHand();
         final SlimefunItem slimefunItem = SlimefunItem.getByItem(itemInHand);
@@ -872,9 +279,14 @@ public class NetworksMain implements TabExecutor {
                 return;
             }
 
-            final ItemStack refreshed = ItemStackUtil.refreshOutdatedItem(quantumCache.getItemStack());
-            if (refreshed != null) {
-                quantumCache.setItemStack(refreshed);
+            final ItemStack stored = quantumCache.getItemStack();
+            final SlimefunItem sfi = SlimefunItem.getByItem(stored);
+            if (sfi != null) {
+                final String quantumStoredId = sfi.getId();
+                SlimefunItem sf = SlimefunItem.getById(quantumStoredId);
+                if (sf != null) {
+                    stored.setItemMeta(sf.getItem().getItemMeta());
+                }
                 player.sendMessage(Lang.getString("messages.commands.updated-item-in-quantum-storage"));
             }
             DataTypeMethods.setCustom(
@@ -946,6 +358,11 @@ public class NetworksMain implements TabExecutor {
         switch (mainCommand.toLowerCase(Locale.ROOT)) {
             case "help" -> {
                 for (String message : Lang.getStringList("messages.commands.example.help")) {
+                    sender.sendMessage(message);
+                }
+            }
+            case "celltoquantum" -> {
+                for (String message : Lang.getStringList("messages.commands.example.celltoquantum")) {
                     sender.sendMessage(message);
                 }
             }
@@ -1023,7 +440,9 @@ public class NetworksMain implements TabExecutor {
                  "addstorageitem",
                  "reducestorageitem",
                  "setquantum",
-                 "setcontainerid" -> {
+                 "setcontainerid",
+                 "celltoquantum",
+                 "unbind" -> {
                 if (!(sender instanceof Player)) {
                     sender.sendMessage(getErrorMessage(ErrorType.MUST_BE_PLAYER));
                     return false;
@@ -1088,7 +507,12 @@ public class NetworksMain implements TabExecutor {
                         return true;
                     }
 
-                    String before = args.length > 1 ? args[1] : "";
+                    if (args.length == 1) {
+                        player.sendMessage(getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "keyInMeta"));
+                        return true;
+                    }
+
+                    String before = args[1];
                     fixBlueprint(player, before);
                     return true;
                 }
@@ -1120,6 +544,15 @@ public class NetworksMain implements TabExecutor {
                         player.sendMessage(e.getMessage());
                     }
 
+                    return true;
+                }
+                case "celltoquantum" -> {
+                    if (!player.hasPermission("networks.admin")
+                        && !player.hasPermission("networks.commands.celltoquantum")) {
+                        player.sendMessage(getErrorMessage(ErrorType.NO_PERMISSION));
+                        return true;
+                    }
+                    convertCellToQuantumStorage(player);
                     return true;
                 }
                 case "addstorageitem" -> {
@@ -1191,159 +624,6 @@ public class NetworksMain implements TabExecutor {
                     return true;
                 }
 
-                case "worldedit" -> {
-                    if (!player.hasPermission("networks.admin")
-                        && !player.hasPermission("networks.commands.worldedit.*")) {
-                        player.sendMessage(getErrorMessage(ErrorType.NO_PERMISSION));
-                        return true;
-                    }
-
-                    if (args.length == 1) {
-                        player.sendMessage(getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "subCommand"));
-                        return true;
-                    }
-
-                    switch (args[1].toLowerCase(Locale.ROOT)) {
-                        case "pos1" -> worldeditPos1(player);
-                        case "pos2" -> worldeditPos2(player);
-
-                        case "clear" -> {
-                            switch (args.length) {
-                                case 4 -> {
-                                    try {
-                                        boolean callHandler = Boolean.parseBoolean(args[2]);
-                                        boolean skipVanilla = Boolean.parseBoolean(args[3]);
-                                        worldeditClear(player, callHandler, skipVanilla);
-                                    } catch (NumberFormatException e) {
-                                        player.sendMessage(getErrorMessage(
-                                            ErrorType.INVALID_REQUIRED_ARGUMENT, "callHandler / skipVanilla"));
-                                    }
-                                }
-                                case 3 -> {
-                                    try {
-                                        boolean callHandler = Boolean.parseBoolean(args[2]);
-                                        worldeditClear(player, callHandler, true);
-                                    } catch (NumberFormatException e) {
-                                        player.sendMessage(
-                                            getErrorMessage(ErrorType.INVALID_REQUIRED_ARGUMENT, "callHandler"));
-                                    }
-                                }
-                                default -> worldeditClear(player, true, true);
-                            }
-                        }
-
-                        case "clone" -> {
-                            if (args.length == 2) {
-                                worldeditClone(player);
-                            } else if (args.length == 3) {
-                                worldeditClone(player, "override".equalsIgnoreCase(args[2]));
-                            }
-                        }
-
-                        case "paste" -> {
-                            if (args.length == 2) {
-                                player.sendMessage(getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "sfId"));
-                                return true;
-                            }
-                            boolean overrideData = false;
-                            boolean force = false;
-                            switch (args.length) {
-                                case 5 -> {
-                                    if ("override".equalsIgnoreCase(args[3])) {
-                                        overrideData = true;
-                                    }
-                                    force = Boolean.parseBoolean(args[4]);
-                                }
-                                case 4 -> {
-                                    if ("override".equalsIgnoreCase(args[3])) {
-                                        overrideData = true;
-                                    }
-                                }
-                            }
-                            worldeditPaste(player, args[2], overrideData, force);
-                        }
-
-                        case "blockmenu" -> {
-                            if (args.length == 2) {
-                                player.sendMessage(getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "subCommand"));
-                                return true;
-                            }
-
-                            if (args[2].toLowerCase(Locale.ROOT).equals("setslot")) {
-                                if (args.length == 3) {
-                                    player.sendMessage(getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "slot"));
-                                    return true;
-                                }
-
-                                try {
-                                    int slot = Calculator.calculate(args[3]).intValue();
-                                    worldeditBlockMenuSetSlot(player, slot);
-                                } catch (NumberFormatException e) {
-                                    player.sendMessage(getErrorMessage(ErrorType.INVALID_REQUIRED_ARGUMENT, "slot"));
-                                    player.sendMessage(e.getMessage());
-                                }
-                            } else {
-                                player.sendMessage(getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "subCommand"));
-                            }
-                        }
-
-                        case "blockinfo" -> {
-                            if (args.length == 2) {
-                                player.sendMessage(getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "subCommand"));
-                                return true;
-                            }
-
-                            switch (args[2].toLowerCase(Locale.ROOT)) {
-                                case "add", "set" -> {
-                                    switch (args.length) {
-                                        case 3 -> player.sendMessage(
-                                            getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "key"));
-                                        case 4 -> player.sendMessage(
-                                            getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "value"));
-                                        case 5 -> {
-                                            String key = args[3];
-                                            String value = args[4];
-                                            worldeditBlockInfoAdd(player, key, value);
-                                        }
-                                    }
-                                }
-                                case "remove" -> {
-                                    if (args.length == 3) {
-                                        player.sendMessage(
-                                            getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "value"));
-                                        return true;
-                                    }
-
-                                    String value = args[3];
-                                    worldeditBlockInfoRemove(player, value);
-                                }
-
-                                default -> player.sendMessage(
-                                    getErrorMessage(ErrorType.MISSING_REQUIRED_ARGUMENT, "subCommand"));
-                            }
-                        }
-                        case "clearpos" -> {
-                            if (!player.hasPermission("networks.admin")
-                                && !player.hasPermission("networks.commands.worldedit.clearpos")) {
-                                player.sendMessage(getErrorMessage(ErrorType.NO_PERMISSION));
-                                return true;
-                            }
-
-                            clearPos(player);
-                        }
-
-                        case "showareaoutline" -> {
-                            if (!player.hasPermission("networks.admin")
-                                && !player.hasPermission("networks.commands.worldedit.showAreaOutline")) {
-                                player.sendMessage(getErrorMessage(ErrorType.NO_PERMISSION));
-                                return true;
-                            }
-
-                            toggleShowSelectedAreaOutline(player);
-                        }
-                    }
-                }
-
                 case "updateitem" -> {
                     if (!player.hasPermission("networks.admin")
                         && !player.hasPermission("networks.commands.updateitem")) {
@@ -1401,18 +681,16 @@ public class NetworksMain implements TabExecutor {
 
                     String filePath = args[1];
                     Pair<ItemStack, MapView> pair = MapUtil.getImageItem(filePath);
-                    if (pair != null) {
-                        ItemStack first = pair.getFirstValue();
-                        MapView second = pair.getSecondValue();
-                        if (second == null) {
-                            player.sendMessage(getErrorMessage(ErrorType.INVALID_REQUIRED_ARGUMENT, "filePath"));
-                            return true;
-                        }
+                    ItemStack first = pair.getFirstValue();
+                    MapView second = pair.getSecondValue();
+                    if (second == null) {
+                        player.sendMessage(getErrorMessage(ErrorType.INVALID_REQUIRED_ARGUMENT, "filePath"));
+                        return true;
+                    }
 
-                        if (first != null) {
-                            InventoryUtil.addItem(player, first);
-                            player.sendMap(second);
-                        }
+                    if (first != null) {
+                        InventoryUtil.addItem(player, first);
+                        player.sendMap(second);
                     }
                 }
 
@@ -1434,12 +712,7 @@ public class NetworksMain implements TabExecutor {
                     }
 
                     final SlimefunItem slimefunItem = StorageCacheUtils.getSfItem(targetBlock.getLocation());
-                    if (slimefunItem == null) {
-                        player.sendMessage(Lang.getString("messages.commands.must-admin-debuggable"));
-                        return true;
-                    }
-
-                    if (!(slimefunItem instanceof AdminDebuggable debuggable)) {
+                    if (slimefunItem == null || !(slimefunItem instanceof AdminDebuggable)) {
                         player.sendMessage(Lang.getString("messages.commands.must-admin-debuggable"));
                         return true;
                     }
@@ -1453,12 +726,12 @@ public class NetworksMain implements TabExecutor {
                             player.sendMessage("l", "oah", "pah", "tmih", "tmoh", "caih", "caoh");
                             return true;
                         }
-                        case "oah" -> map = NetworkRoot.observingAccessHistory;
-                        case "pah" -> map = NetworkRoot.persistentAccessHistory;
-                        case "tmih" -> map = NetworkRoot.transportMissInputHistory;
-                        case "tmoh" -> map = NetworkRoot.transportMissOutputHistory;
-                        case "caih" -> map = NetworkRoot.controlledAccessInputHistory;
-                        case "caoh" -> map = NetworkRoot.controlledAccessOutputHistory;
+                        case "oah" -> map = NetworkRoot.getObservingAccessHistory();
+                        case "pah" -> map = NetworkRoot.getPersistentAccessHistory();
+                        case "tmih" -> map = NetworkRoot.getTransportMissInputHistory();
+                        case "tmoh" -> map = NetworkRoot.getTransportMissOutputHistory();
+                        case "caih" -> map = NetworkRoot.getControlledAccessInputHistory();
+                        case "caoh" -> map = NetworkRoot.getControlledAccessOutputHistory();
                         default -> {
                             player.sendMessage(getErrorMessage(ErrorType.INVALID_REQUIRED_ARGUMENT, "cchName"));
                             return true;
@@ -1487,6 +760,17 @@ public class NetworksMain implements TabExecutor {
                         player.sendMessage("cache: " + cchName);
                         player.sendMessage("value: " + n.intValue());
                     }
+                }
+
+                case "unbind" -> {
+                    ItemStack weapon = player.getInventory().getItemInMainHand();
+                    if (CollectService.hasMark(weapon)) {
+                        CollectService.unbind(weapon);
+                        player.sendMessage(Lang.getString("messages.cellnet.collect.unbind"));
+                    } else {
+                        player.sendMessage(Lang.getString("messages.cellnet.collect.no-bind"));
+                    }
+                    return true;
                 }
 
                 default -> help(player, null);
@@ -1524,6 +808,10 @@ public class NetworksMain implements TabExecutor {
         player.sendMessage(Lang.getString("messages.commands.updated-quantum-storage"));
     }
 
+    public void convertCellToQuantumStorage(@NotNull Player player) {
+        CellQuantumConverter.convert(player);
+    }
+
     // change "networks-changed:recipe" -> "networks:recipe"
     public void fixBlueprint(@NotNull Player player, @NotNull String before) {
         ItemStack blueprint = player.getInventory().getItemInMainHand();
@@ -1534,7 +822,7 @@ public class NetworksMain implements TabExecutor {
 
         final SlimefunItem item = SlimefunItem.getByItem(blueprint);
 
-        if (!(item instanceof AbstractBlueprint)) {
+        if (!(item instanceof Blueprint)) {
             player.sendMessage(Lang.getString("messages.commands.must-hand-blueprint"));
             return;
         }
@@ -1548,23 +836,13 @@ public class NetworksMain implements TabExecutor {
             return;
         }
 
-        ItemStack fixed = AbstractBlueprint.refreshOutdatedBlueprint(blueprint);
-
-        if (fixed == null) {
-            // The blueprint is not outdated by content, but it may still carry a legacy namespaced key
-            final BlueprintInstance primary = DataTypeMethods.getCustom(
-                blueprintMeta, Keys.BLUEPRINT_INSTANCE, PersistentCraftingBlueprintType.TYPE);
-            if (primary == null) {
-                fixed = blueprint.clone();
-                AbstractBlueprint.setBlueprint(fixed, instance.getRecipeItems(), instance.getItemStack());
-            } else {
-                player.sendMessage(Lang.getString("messages.commands.blueprint-up-to-date"));
-                return;
-            }
+        ItemStack fix = NetworksSlimefunItemStacks.CRAFTING_BLUEPRINT.clone();
+        ItemStack item2 = instance.getItemStack();
+        if (item2 != null) {
+            Blueprint.setBlueprint(fix, instance.getRecipeItems(), item2);
         }
 
-        fixed.setAmount(blueprint.getAmount());
-        blueprint.setItemMeta(fixed.getItemMeta());
+        blueprint.setItemMeta(fix.getItemMeta());
 
         player.sendMessage(Lang.getString("messages.commands.fixed-blueprint"));
     }
@@ -1584,6 +862,8 @@ public class NetworksMain implements TabExecutor {
             case 1 -> {
                 return List.of(
                     "addStorageItem",
+                    "celltoQuantum",
+                    "unbind",
                     "fillQuantum",
                     "fixBlueprint",
                     "getStorageItem",
@@ -1600,6 +880,7 @@ public class NetworksMain implements TabExecutor {
                     // case "help", "updateitem" -> List.of();
                     case "getstorageitem" -> List.of("<slot>");
                     case "fillquantum", "addstorageitem", "reducestorageitem", "setquantum" -> List.of("<amount>");
+                    case "fixblueprint" -> List.of("<keyInMeta>");
                     case "setcontainerid" -> List.of("<containerId>");
                     case "worldedit" -> List.of(
                         "pos1",

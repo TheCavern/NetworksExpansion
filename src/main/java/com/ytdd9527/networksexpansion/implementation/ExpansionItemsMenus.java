@@ -81,6 +81,8 @@ public final class ExpansionItemsMenus {
         Lang.getString("groups.expansion.custom.sub_menu_networks_drawers"));
     public static final SubFlexItemGroup SUB_MENU_CARGO = GroupConfigUtil.getSubFlexItemGroup(
         "NTW_EXPANSION_SUB_MENU_CARGO", Material.END_ROD, Lang.getString("groups.expansion.custom.sub_menu_cargo"));
+    public static final SubFlexItemGroup SUB_MENU_CELLNET = GroupConfigUtil.getSubFlexItemGroup(
+        "NTW_EXPANSION_SUB_MENU_CELLNET", Material.CHISELED_BOOKSHELF, Lang.getString("groups.expansion.custom.sub_menu_cellnet"));
 
     // functional machine
     public static final SubFlexItemGroup MAIN_MENU_FUNCTIONAL_MACHINE = GroupConfigUtil.getSubFlexItemGroup(
@@ -99,16 +101,6 @@ public final class ExpansionItemsMenus {
         "NTW_EXPANSION_SUB_MENU_BRIDGE",
         Material.WHITE_STAINED_GLASS,
         Lang.getString("groups.expansion.custom.sub_menu_bridge"));
-    @Deprecated
-    public static final SubFlexItemGroup SUB_MENU_ENCODER = GroupConfigUtil.getSubFlexItemGroup(
-        "NTW_EXPANSION_SUB_MENU_ENCODER",
-        Material.TARGET,
-        Lang.getString("groups.expansion.custom.sub_menu_encoder"));
-    @Deprecated
-    public static final SubFlexItemGroup SUB_MENU_CRAFTER_MACHINE = GroupConfigUtil.getSubFlexItemGroup(
-        "NTW_EXPANSION_SUB_MENU_CRAFTER_MACHINE",
-        Material.CRAFTING_TABLE,
-        Lang.getString("groups.expansion.custom.sub_menu_crafter_machine"));
 
     // trophy
     public static final SubFlexItemGroup MAIN_MENU_TROPHY = GroupConfigUtil.getSubFlexItemGroup(
@@ -124,7 +116,7 @@ public final class ExpansionItemsMenus {
         Material.KNOWLEDGE_BOOK,
         Lang.getString("groups.expansion.custom.sub_menu_announce"));
 
-    // deprecated
+    // deprecated items
     public static final SubFlexItemGroup SUB_MENU_DEPRECATED = GroupConfigUtil.getSubFlexItemGroup(
         "NTW_EXPANSION_SUB_MENU_DEPRECATED",
         Material.DEEPSLATE_BRICKS,

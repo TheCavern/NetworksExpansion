@@ -13,7 +13,7 @@ import com.balugaq.netex.api.helpers.SupportedPressureChamberRecipes;
 import com.balugaq.netex.api.helpers.SupportedQuantumWorkbenchRecipes;
 import com.balugaq.netex.api.helpers.SupportedSmelteryRecipes;
 import com.balugaq.netex.utils.Lang;
-import com.ytdd9527.networksexpansion.core.items.unusable.AbstractBlueprint;
+import com.ytdd9527.networksexpansion.core.items.unusable.Blueprint;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import lombok.Getter;
 import org.bukkit.inventory.ItemStack;
@@ -29,7 +29,6 @@ import java.util.function.BiPredicate;
 /**
  * @author balugaq
  */
-@Deprecated
 @NullMarked
 public enum CraftType {
     ANCIENT_ALTAR(SupportedAncientAltarRecipes.getRecipes(), SupportedAncientAltarRecipes::testRecipe),
@@ -45,7 +44,7 @@ public enum CraftType {
     QUANTUM_WORKBENCH(SupportedQuantumWorkbenchRecipes.getRecipes(), SupportedQuantumWorkbenchRecipes::testRecipe),
     SMELTERY(SupportedSmelteryRecipes.getRecipes(), SupportedSmelteryRecipes::testRecipe);
 
-    private static final Map<CraftType, Set<Map.Entry<ItemStack[], ItemStack>>> map = new HashMap<>();
+    private static final Map<CraftType, Set<Map.Entry<ItemStack[], ItemStack>>> map = buildMap();
 
     @Getter
     private final Set<Map.Entry<ItemStack[], ItemStack>> recipeEntries;
@@ -56,19 +55,27 @@ public enum CraftType {
         this.testRecipe = testRecipe;
     }
 
+    private static Map<CraftType, Set<Map.Entry<ItemStack[], ItemStack>>> buildMap() {
+        Map<CraftType, Set<Map.Entry<ItemStack[], ItemStack>>> result = new HashMap<>();
+        for (CraftType type : values()) {
+            result.put(type, type.recipeEntries);
+        }
+        return java.util.Collections.unmodifiableMap(result);
+    }
+
     public boolean testRecipe(ItemStack[] inputs, ItemStack[] recipe) {
         return testRecipe.test(inputs, recipe);
     }
 
     public boolean isValidBlueprint(SlimefunItem item) {
-        if (item instanceof AbstractBlueprint blueprint) {
+        if (item instanceof Blueprint blueprint) {
             return blueprint.craftType() == this;
         }
         return false;
     }
 
     public void blueprintSetter(ItemStack itemStack, ItemStack[] inputs, ItemStack crafted) {
-        AbstractBlueprint.setBlueprint(itemStack, inputs, crafted);
+        Blueprint.setBlueprint(itemStack, inputs, crafted);
     }
 
     public String translate() {
@@ -85,21 +92,6 @@ public enum CraftType {
     }
 
     public static Map<CraftType, Set<Map.Entry<ItemStack[], ItemStack>>> map() {
-        if (map.isEmpty()) {
-            map.put(ANCIENT_ALTAR, ANCIENT_ALTAR.recipeEntries);
-            map.put(ARMOR_FORGE, ARMOR_FORGE.recipeEntries);
-            map.put(COMPRESSOR, COMPRESSOR.recipeEntries);
-            map.put(CRAFTING, CRAFTING.recipeEntries);
-            map.put(EXPANSION_WORKBENCH, EXPANSION_WORKBENCH.recipeEntries);
-            map.put(GRIND_STONE, GRIND_STONE.recipeEntries);
-            map.put(JUICER, JUICER.recipeEntries);
-            map.put(MAGIC_WORKBENCH, MAGIC_WORKBENCH.recipeEntries);
-            map.put(ORE_CRUSHER, ORE_CRUSHER.recipeEntries);
-            map.put(PRESSURE_CHAMBER, PRESSURE_CHAMBER.recipeEntries);
-            map.put(QUANTUM_WORKBENCH, QUANTUM_WORKBENCH.recipeEntries);
-            map.put(SMELTERY, SMELTERY.recipeEntries);
-        }
-
         return map;
     }
 }

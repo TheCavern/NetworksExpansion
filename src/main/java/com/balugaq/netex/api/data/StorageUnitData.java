@@ -10,9 +10,7 @@ import lombok.Getter;
 import lombok.ToString;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.Tag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,10 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings({"UnusedAssignment", "DuplicatedCode"})
 @ToString
 public class StorageUnitData {
-    public static final Map<Location, Map<Integer, Integer /* Access times */>> observingAccessHistory =
-        new ConcurrentHashMap<>();
-    public static final Map<Location, Map<Integer, Integer /* Cache miss times */>> persistentAccessHistory =
-        new ConcurrentHashMap<>();
+    public static final Map<Location, Map<Integer, Integer>>
+        /* from -> to slot -> Access times */ observingAccessHistory = new ConcurrentHashMap<>(),
+        /* from -> to slot -> Cache miss times */ persistentAccessHistory =new ConcurrentHashMap<>();
 
     @Getter
     private final int id;
@@ -40,6 +37,7 @@ public class StorageUnitData {
     private final OfflinePlayer owner;
 
     private final ConcurrentHashMap<Integer, ItemContainer> storedItems;
+
     @Getter
     private boolean isPlaced;
 
@@ -70,24 +68,6 @@ public class StorageUnitData {
         this(id, Bukkit.getOfflinePlayer(UUID.fromString(ownerUUID)), sizeType, isPlaced, lastLocation, storedItems);
     }
 
-    @Deprecated(forRemoval = true)
-    public StorageUnitData(
-        int id,
-        OfflinePlayer owner,
-        StorageUnitType sizeType,
-        boolean isPlaced,
-        Location lastLocation,
-        Map<Integer, ItemContainer> storedItems) {
-        this(id,
-            owner,
-            sizeType,
-            isPlaced,
-            lastLocation,
-            storedItems instanceof ConcurrentHashMap<Integer, ItemContainer> concurrent
-                ? concurrent
-                : throwUnsupportedOperationException("General Map is no longer allowed to be an argument in this method, you are supposed to use ConcurrentMap instead of Map"));
-    }
-
     public StorageUnitData(
         int id,
         OfflinePlayer owner,
@@ -104,13 +84,13 @@ public class StorageUnitData {
     }
 
     public static void addPersistentAccessHistory(Location location, Integer accessLocation) {
-        Map<Integer, Integer> locations = persistentAccessHistory.getOrDefault(location, new ConcurrentHashMap<>());
+        var locations = persistentAccessHistory.getOrDefault(location, new ConcurrentHashMap<>());
         locations.put(accessLocation, 0);
         persistentAccessHistory.put(location, locations);
     }
 
     public static void addCacheMiss(Location location, Integer accessLocation) {
-        Map<Integer, Integer> locations = persistentAccessHistory.getOrDefault(location, new ConcurrentHashMap<>());
+        var locations = persistentAccessHistory.getOrDefault(location, new ConcurrentHashMap<>());
         int value = locations.getOrDefault(accessLocation, 0) + 1;
         if (value > NetworkRoot.cacheMissThreshold) {
             removePersistentAccessHistory(location, accessLocation);
@@ -121,7 +101,7 @@ public class StorageUnitData {
     }
 
     public static void minusCacheMiss(Location location, Integer accessLocation) {
-        Map<Integer, Integer> locations = persistentAccessHistory.getOrDefault(location, new ConcurrentHashMap<>());
+        var locations = persistentAccessHistory.getOrDefault(location, new ConcurrentHashMap<>());
         int value = Math.max(locations.getOrDefault(accessLocation, 0) - 1, 0);
         locations.put(accessLocation, value);
     }
@@ -135,13 +115,13 @@ public class StorageUnitData {
     }
 
     public static void removePersistentAccessHistory(Location location, Integer accessLocation) {
-        Map<Integer, Integer> locations = persistentAccessHistory.getOrDefault(location, new ConcurrentHashMap<>());
+        var locations = persistentAccessHistory.getOrDefault(location, new ConcurrentHashMap<>());
         locations.remove(accessLocation);
         persistentAccessHistory.put(location, locations);
     }
 
     public static void addCountObservingAccessHistory(Location location, Integer accessLocation) {
-        Map<Integer, Integer> locations = observingAccessHistory.getOrDefault(location, new HashMap<>());
+        var locations = observingAccessHistory.getOrDefault(location, new HashMap<>());
         Integer count = locations.getOrDefault(accessLocation, 0);
         if (count >= NetworkRoot.persistentThreshold) {
             removeCountObservingAccessHistory(location, accessLocation);
@@ -161,106 +141,13 @@ public class StorageUnitData {
     }
 
     public static void removeCountObservingAccessHistory(Location location, Integer accessLocation) {
-        Map<Integer, Integer> locations = observingAccessHistory.getOrDefault(location, new ConcurrentHashMap<>());
+        var locations = observingAccessHistory.getOrDefault(location, new ConcurrentHashMap<>());
         locations.remove(accessLocation);
         observingAccessHistory.put(location, locations);
     }
 
     public static boolean isBlacklisted(@NotNull ItemStack itemStack) {
-        // if item is air, it's blacklisted
-        if (itemStack.getType() == Material.AIR) {
-            return true;
-        }
-        // if item has invalid durability, it's blacklisted
-        if (itemStack.getType().getMaxDurability() < 0) {
-            return true;
-        }
-        // if item is a shulker box, it's blacklisted
-        if (Tag.SHULKER_BOXES.isTagged(itemStack.getType())) {
-            return true;
-        }
-        // if item is a bundle, it's blacklisted
-        return itemStack.getType() == Material.BUNDLE;
-    }
-
-    private static ConcurrentHashMap<Integer, ItemContainer> throwUnsupportedOperationException(@NotNull String message) {
-        throw new UnsupportedOperationException(message);
-    }
-
-    /**
-     * Add item to unit, the amount will be the item stack amount
-     *
-     * @param item: item will be added
-     * @return the amount actual added
-     */
-    @Deprecated
-    public int addStoredItem(@NotNull ItemStack item, boolean contentLocked) {
-        return addStoredItem(item, item.getAmount(), contentLocked, false);
-    }
-
-    @Deprecated
-    public int addStoredItem(@NotNull ItemStack item, boolean contentLocked, boolean force) {
-        return addStoredItem(item, item.getAmount(), contentLocked, force);
-    }
-
-    @Deprecated
-    public int addStoredItem(@NotNull ItemStack item, int amount, boolean contentLocked) {
-        return addStoredItem(item, amount, contentLocked, false);
-    }
-
-    /**
-     * Add item to unit
-     *
-     * @param item:   item will be added
-     * @param amount: amount will be added
-     * @return the amount actual added
-     */
-    @Deprecated
-    public int addStoredItem(@NotNull ItemStack item, int amount, boolean contentLocked, boolean force) {
-        int add = 0;
-        boolean isVoidExcess = NetworksDrawer.isVoidExcess(getLastLocation());
-        for (ItemContainer each : storedItems.values()) {
-            if (each.isSimilar(item)) {
-                // Found existing one, add amount
-                int raw = sizeType.getEachMaxSize() - each.getAmount();
-                if (raw < 0) {
-                    // If super-full, no more add and roll back to normal amount
-                    each.setAmount(sizeType.getEachMaxSize());
-                    return 0;
-                }
-                add = Math.max(0, Math.min(amount, raw));
-                if (isVoidExcess) {
-                    if (add > 0) {
-                        each.addAmount(add);
-                        DataStorage.setStoredAmount(id, each.getId(), each.getAmount());
-                    } else {
-                        item.setAmount(0);
-                        return add;
-                    }
-                } else {
-                    each.addAmount(add);
-                    DataStorage.setStoredAmount(id, each.getId(), each.getAmount());
-                }
-                return add;
-            }
-        }
-
-        // isforce?
-        if (!force) {
-            // If in content locked mode, no new input allowed
-            if (contentLocked || NetworksDrawer.isLocked(getLastLocation())) return 0;
-        }
-        // Not found, new one
-        synchronized (storedItems) {
-            if (storedItems.size() < sizeType.getMaxItemCount()) {
-                add = Math.min(amount, sizeType.getEachMaxSize());
-                int itemId = DataStorage.getItemId(item);
-                storedItems.put(itemId, new ItemContainer(itemId, item, add));
-                DataStorage.addStoredItem(id, itemId, add);
-                return add;
-            }
-        }
-        return add;
+        return StackUtils.isBlacklisted(itemStack);
     }
 
     public synchronized void setPlaced(boolean isPlaced) {
@@ -290,7 +177,7 @@ public class StorageUnitData {
         }
     }
 
-    public void setItemAmount(int itemId, int amount) {
+    public synchronized void setItemAmount(int itemId, int amount) {
         if (amount < 0) {
             // Directly remove
             removeItem(itemId);
@@ -303,7 +190,7 @@ public class StorageUnitData {
         }
     }
 
-    public void removeAmount(int itemId, int amount) {
+    public synchronized void removeAmount(int itemId, int amount) {
         ItemContainer container = storedItems.get(itemId);
         if (container != null) {
             container.removeAmount(amount);
@@ -358,7 +245,7 @@ public class StorageUnitData {
 
     @Deprecated
     @Nullable
-    public ItemStack requestItem(@NotNull ItemRequest itemRequest) {
+    public synchronized ItemStack requestItem(@NotNull ItemRequest itemRequest) {
         ItemStack item = itemRequest.getItemStack();
         if (item == null) {
             return null;
@@ -367,7 +254,7 @@ public class StorageUnitData {
         int amount = itemRequest.getAmount();
         for (ItemContainer itemContainer : getStoredItems()) {
             int containerAmount = itemContainer.getAmount();
-            if (StackUtils.itemsMatch(itemContainer.getSampleDirectly(), item)) {
+            if (StackUtils.itemsMatch(itemRequest, itemContainer.getSampleDirectly())) {
                 int take = Math.min(amount, containerAmount);
                 if (take <= 0) {
                     break;
@@ -382,70 +269,13 @@ public class StorageUnitData {
         return null;
     }
 
-    @Deprecated
-    public void depositItemStacks(@NotNull Map<ItemStack, Long> itemsToDeposit, boolean contentLocked) {
-        for (Map.Entry<ItemStack, Long> entry : itemsToDeposit.entrySet()) {
-            if (entry.getValue() > Integer.MAX_VALUE) {
-                // rollback to MAX_VALUE
-                long before = entry.getValue();
-                ItemStack item = StackUtils.getAsQuantity(entry.getKey(), Integer.MAX_VALUE);
-                depositItemStack(item, contentLocked);
-                long leftover = item.getAmount();
-                entry.setValue(before - Integer.MAX_VALUE + leftover);
-            } else {
-                ItemStack item = StackUtils.getAsQuantity(entry.getKey(), Math.toIntExact(entry.getValue()));
-                depositItemStack(item, contentLocked);
-                long rest = item.getAmount();
-                entry.setValue(rest);
-            }
-        }
-    }
-
-    @Deprecated
-    public void depositItemStack(@NotNull Map.Entry<ItemStack, Integer> entry, boolean contentLocked) {
-        ItemStack item = StackUtils.getAsQuantity(entry.getKey(), entry.getValue());
-        depositItemStack(item, contentLocked);
-        int leftover = item.getAmount();
-        entry.setValue(leftover);
-    }
-
-    @Deprecated
-    public void depositItemStack(@NotNull Map<ItemStack, Integer> itemsToDeposit, boolean contentLocked) {
-        for (Map.Entry<ItemStack, Integer> entry : itemsToDeposit.entrySet()) {
-            depositItemStack(entry, contentLocked);
-        }
-    }
-
-    @Deprecated
-    public void depositItemStack(@NotNull ItemStack @NotNull [] itemsToDeposit, boolean contentLocked) {
-        for (ItemStack item : itemsToDeposit) {
-            depositItemStack(item, contentLocked);
-        }
-    }
-
-    @Deprecated
-    public void depositItemStack(@Nullable ItemStack itemsToDeposit, boolean contentLocked, boolean force) {
-        if (itemsToDeposit == null || isBlacklisted(itemsToDeposit)) {
-            return;
-        }
-        int actualAdded = addStoredItem(itemsToDeposit, itemsToDeposit.getAmount(), contentLocked, force);
-        if (actualAdded > 0) {
-            itemsToDeposit.setAmount(itemsToDeposit.getAmount() - actualAdded);
-        }
-    }
-
-    @Deprecated
-    public void depositItemStack(ItemStack item, boolean contentLocked) {
-        depositItemStack(item, contentLocked, false);
-    }
-
     @Nullable
-    public ItemStack requestItem0(@NotNull Location accessor, @NotNull ItemRequest itemRequest) {
+    public synchronized ItemStack requestItem0(@NotNull Location accessor, @NotNull ItemRequest itemRequest) {
         return requestItem0(accessor, itemRequest, true);
     }
 
     @Nullable
-    public ItemStack requestItem0(@NotNull Location accessor, @NotNull ItemRequest itemRequest, boolean contentLocked) {
+    public synchronized ItemStack requestItem0(@NotNull Location accessor, @NotNull ItemRequest itemRequest, boolean contentLocked) {
         ItemStack item = itemRequest.getItemStack();
         if (item == null) {
             return null;
@@ -471,7 +301,7 @@ public class StorageUnitData {
 
                 ItemContainer itemContainer = stored.get(i);
                 int containerAmount = itemContainer.getAmount();
-                if (StackUtils.itemsMatch(itemContainer.getSampleDirectly(), item)) {
+                if (StackUtils.itemsMatch(itemRequest, itemContainer.getSampleDirectly())) {
                     int take = Math.min(amount, containerAmount);
                     if (take <= 0) {
                         if (!contentLocked) {
@@ -510,7 +340,7 @@ public class StorageUnitData {
         for (int i = 0; i < stored.size(); i++) {
             ItemContainer itemContainer = stored.get(i);
             int containerAmount = itemContainer.getAmount();
-            if (StackUtils.itemsMatch(itemContainer.getSampleDirectly(), item)) {
+            if (StackUtils.itemsMatch(itemRequest, itemContainer.getSampleDirectly())) {
                 int take = Math.min(amount, containerAmount);
                 if (take <= 0) {
                     if (!contentLocked) {
@@ -534,7 +364,7 @@ public class StorageUnitData {
         return null;
     }
 
-    public void depositItemStacks0(
+    public synchronized void depositItemStacks0(
         @NotNull Location accessor, @NotNull Map<ItemStack, Long> itemsToDeposit, boolean contentLocked) {
         for (Map.Entry<ItemStack, Long> entry : itemsToDeposit.entrySet()) {
             if (entry.getValue() > Integer.MAX_VALUE) {
@@ -553,7 +383,7 @@ public class StorageUnitData {
         }
     }
 
-    public void depositItemStack0(
+    public synchronized void depositItemStack0(
         @NotNull Location accessor, @NotNull Map.Entry<ItemStack, Integer> entry, boolean contentLocked) {
         ItemStack item = StackUtils.getAsQuantity(entry.getKey(), entry.getValue());
         depositItemStack0(accessor, item, contentLocked);
@@ -561,7 +391,7 @@ public class StorageUnitData {
         entry.setValue(leftover);
     }
 
-    public void depositItemStack0(
+    public synchronized void depositItemStack0(
         @NotNull Location accessor, @NotNull Map<ItemStack, Integer> itemsToDeposit, boolean contentLocked) {
         for (Map.Entry<ItemStack, Integer> entry : itemsToDeposit.entrySet()) {
             depositItemStack0(accessor, entry, contentLocked);
@@ -575,7 +405,7 @@ public class StorageUnitData {
         }
     }
 
-    public void depositItemStack0(
+    public synchronized void depositItemStack0(
         @NotNull Location accessor, @Nullable ItemStack itemsToDeposit, boolean contentLocked, boolean force) {
         if (itemsToDeposit == null || isBlacklisted(itemsToDeposit)) {
             return;
@@ -598,7 +428,7 @@ public class StorageUnitData {
      * @param amount:   amount will be added
      * @return the amount actual added
      */
-    public int addStoredItem0(
+    public synchronized int addStoredItem0(
         Location accessor, @NotNull ItemStack item, int amount, boolean contentLocked, boolean force) {
         int add = 0;
         boolean isVoidExcess = NetworksDrawer.isVoidExcess(getLastLocation());
@@ -693,14 +523,12 @@ public class StorageUnitData {
             if (contentLocked || NetworksDrawer.isLocked(getLastLocation())) return 0;
         }
         // Not found, new one
-        synchronized (storedItems) {
-            if (storedItems.size() < sizeType.getMaxItemCount()) {
-                add = Math.min(amount, sizeType.getEachMaxSize());
-                int itemId = DataStorage.getItemId(item);
-                storedItems.put(itemId, new ItemContainer(itemId, item, add));
-                DataStorage.addStoredItem(id, itemId, add);
-                return add;
-            }
+        if (storedItems.size() < sizeType.getMaxItemCount()) {
+            add = Math.min(amount, sizeType.getEachMaxSize());
+            int itemId = DataStorage.getItemId(item);
+            storedItems.put(itemId, new ItemContainer(itemId, item, add));
+            DataStorage.addStoredItem(id, itemId, add);
+            return add;
         }
         return add;
     }

@@ -162,6 +162,12 @@ public class Icon {
     public static final ItemStack SCRIPT_CENTER =
         Lang.getIcon("script-center", Material.COMPASS);
 
+    public static final ItemStack MATCH_OPTION_SETTINGS =
+        Lang.getIcon("match-option-settings", Material.COMPASS);
+
+    public static final ItemStack MATCH_OPTION_CLOSE =
+        Lang.getIcon("match-option-close", Material.RED_CONCRETE);
+
     public static final ItemStack RETURN_INGREDIENT =
         Lang.getIcon("return-ingredient", Material.FLOWER_POT);
 
@@ -183,6 +189,15 @@ public class Icon {
 
     public static final ItemStack ITEM_TARGET_DESC_STACK =
         Lang.getIcon("item-target-desc-stack", Material.ORANGE_STAINED_GLASS_PANE);
+
+    public static final ItemStack LINKER_TYPE_HYPER_LINK =
+        Lang.getIcon("linker-type-hyper-link", Material.NETHER_STAR);
+
+    public static final ItemStack LINKER_TYPE_QUANTUM_LINK =
+        Lang.getIcon("linker-type-quantum-link", Material.NETHER_STAR);
+
+    public static final ItemStack LINKER_TARGET_SWITCH =
+        Lang.getIcon("linker-target-switch", Material.TARGET);
 
     // pages are 1-based
     @SuppressWarnings("deprecation")

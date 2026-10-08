@@ -5,14 +5,12 @@ import com.balugaq.netex.api.helpers.Icon;
 import com.balugaq.netex.utils.BlockMenuUtil;
 import com.balugaq.netex.utils.Lang;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
-import com.ytdd9527.networksexpansion.core.items.unusable.AbstractBlueprint;
+import com.ytdd9527.networksexpansion.core.items.unusable.Blueprint;
 import com.ytdd9527.networksexpansion.implementation.ExpansionItems;
 import io.github.sefiraat.networks.network.NodeType;
 import io.github.sefiraat.networks.network.stackcaches.BlueprintInstance;
 import io.github.sefiraat.networks.slimefun.network.NetworkObject;
 import io.github.sefiraat.networks.utils.Keys;
-import io.github.sefiraat.networks.utils.datatypes.DataTypeMethods;
-import io.github.sefiraat.networks.utils.datatypes.PersistentCraftingBlueprintType;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
@@ -134,7 +132,7 @@ public class NetworkBlueprintDecoder extends NetworkObject {
             return;
         }
 
-        final ItemStack refreshedBlueprint = AbstractBlueprint.refreshOutdatedBlueprint(input);
+        final ItemStack refreshedBlueprint = Blueprint.refreshOutdatedBlueprint(input);
         if (refreshedBlueprint != null) {
             refreshedBlueprint.setAmount(input.getAmount());
             menu.replaceExistingItem(getInputSlot(), refreshedBlueprint);
@@ -142,7 +140,7 @@ public class NetworkBlueprintDecoder extends NetworkObject {
         }
 
         SlimefunItem item = SlimefunItem.getByItem(input);
-        if (!(item instanceof AbstractBlueprint)) {
+        if (!(item instanceof Blueprint)) {
             player.sendMessage(Lang.getString("messages.unsupported-operation.decoder.not_blueprint"));
             sendFeedback(menu.getLocation(), FeedbackType.NOT_BLUEPRINT);
             return;
@@ -156,7 +154,7 @@ public class NetworkBlueprintDecoder extends NetworkObject {
         }
 
         BlueprintInstance blueprintInstance = Keys.getBlueprintInstance(meta);
-        if (blueprintInstance == null) {
+        if (blueprintInstance == null) {    
             player.sendMessage(Lang.getString("messages.unsupported-operation.decoder.invalid_blueprint"));
             sendFeedback(menu.getLocation(), FeedbackType.INVALID_BLUEPRINT);
             return;

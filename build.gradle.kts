@@ -9,8 +9,9 @@ import java.time.format.DateTimeFormatter
 plugins {
     java
     `maven-publish`
-    alias(libs.plugins.shadow)
-    alias(libs.plugins.git.properties)
+    id("com.gradleup.shadow") version "9.6.1"
+    id("xyz.jpenilla.run-paper") version "3.1.0"
+    id("com.gorylenko.gradle-git-properties") version "2.5.7"
 }
 
 val buildTimestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM.dd.yyyy-HHmm")!!)!!
@@ -33,10 +34,17 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
-    maven("https://repo.codemc.io/repository/maven-public/")
     maven("https://nexus.neetgames.com/repository/maven-public")
     maven("https://repo.bg-software.com/repository/api/")
     maven("https://repo.rosewooddev.io/repository/public/")
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+    maven("https://repo.codemc.org/repository/maven-public/")
+    maven("https://oss.sonatype.org/content/groups/public/")
+    maven("https://repo.alessiodp.com/releases/")
+    maven("https://maven.enginehub.org/repo/")
+    maven("https://repo.alessiodp.com/releases")
+    maven("https://repo.jeff-media.com/public")
     maven {
         url = URI("https://mvn.thecavern.net/slimefun")
         credentials {
@@ -48,45 +56,50 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.org.bstats.bstats.bukkit)
-    implementation(libs.com.google.code.findbugs.annotations) {
-        exclude(mapOf("group" to "net.jcip", "module" to "jcip-annotations"))
-        exclude(mapOf("group" to "com.google.code.findbugs", "module" to "jsr305"))
+    // Core
+    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    compileOnly("com.github.slimefun:Slimefun:indev-Jul.06.2026-1159")
+
+    // Tools etc.
+    implementation("org.bstats:bstats-bukkit:3.2.1")
+    implementation("com.jeff-media:MorePersistentDataTypes:2.4.0")
+    implementation("dev.sefiraat:SefiLib:0.3.0")
+    implementation("net.byteflux:libby-bukkit:1.3.2")
+    implementation("com.github.balugaq:BigInteractionMenu:8991544824")
+
+    compileOnly("com.google.code.findbugs:annotations:3.0.1u2") {
+        exclude("net.jcip", "jcip-annotations")
+        exclude("com.google.code.findbugs", "jsr305")
     }
+    compileOnly("org.projectlombok:lombok:1.18.48")
+    annotationProcessor("org.projectlombok:lombok:1.18.48")
+    compileOnly("com.github.houbb:pinyin:0.4.0")
 
-    implementation(libs.com.jeff.media.morepersistentdatatypes)
-    implementation(libs.com.github.houbb.pinyin)
-    implementation(libs.dev.sefiraat.sefilib)
-
-    compileOnly(libs.io.papermc.paper.paper.api)
-    compileOnly(libs.com.github.slimefun.slimefun)
-    compileOnly(libs.com.github.slimefunguguproject.infinityexpansion)
-    compileOnly(libs.com.github.sefiraat.netheopoiesis)
-    compileOnly(libs.io.github.schntgaispock.slimehud)
-    compileOnly(libs.com.bgsoftware.wildchestsapi)
-    compileOnly(libs.com.bgsoftware.wildstackerapi)
-    compileOnly(libs.dev.rosewood.rosestacker)
-
-    compileOnly(libs.com.gmail.nossr50.mcmmo.mcmmo) {
-        exclude(mapOf("group" to "com.sk89q.worldedit", "module" to "worldedit-bukkit"))
-        exclude(mapOf("group" to "com.sk89q.worldedit", "module" to "worldedit-core"))
-        exclude(mapOf("group" to "com.sk89q.worldguard", "module" to "worldguard-legacy"))
-        exclude(mapOf("group" to "com.comphenix.protocol", "module" to "ProtocolLib"))
+    // Supported Plugins
+    compileOnly("com.github.SlimefunGuguProject:InfinityExpansion:3c5db3650a")
+    compileOnly("com.github.Sefiraat:Netheopoiesis:8d1af6c570")
+    compileOnly("io.github.schntgaispock.slimehud:SlimeHUD:indev-Jul.06.2026-1431")
+    compileOnly("com.bgsoftware:WildChestsAPI:2026.2")
+    compileOnly("com.bgsoftware:WildStackerAPI:2026.2")
+    compileOnly("dev.rosewood:rosestacker:1.5.23")
+    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.3.000") {
+        exclude("com.sk89q.worldedit", "worldedit-bukkit")
+        exclude("com.sk89q.worldedit", "worldedit-core")
+        exclude("com.sk89q.worldguard", "worldguard-legacy")
+        exclude("com.comphenix.protocol", "ProtocolLib")
     }
-
-    compileOnly(libs.net.guizhanss.guizhanlibplugin)
-    compileOnly(libs.com.github.balugaq.fluffymachines)
-    compileOnly(libs.com.github.timetowndev.guguslimefunlib)
-    compileOnly(libs.com.github.balugaq.justenoughguide)
-
-    compileOnly(libs.lombok)
-    annotationProcessor(libs.lombok)
-    testCompileOnly(libs.lombok)
-    testAnnotationProcessor(libs.lombok)
+    compileOnly("net.guizhanss:GuizhanLibPlugin:2.5.0-Cavern")
+    compileOnly("io.ncbpfluffybear:FluffyMachines:indev-Jul.06.2026-1252")
+    compileOnly("com.github.TimetownDev:GuguSlimefunLib:45627c6f8e")
+    compileOnly("com.github.balugaq:JustEnoughGuide:09e106914d")
+    // System-scoped local JARs
+    compileOnly(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))
 }
 
-tasks.jar {
-    enabled = false
+tasks.withType<JavaExec>().configureEach {
+    systemProperty("file.encoding", "UTF-8")
+    systemProperty("sun.stdout.encoding", "UTF-8")
+    systemProperty("sun.stderr.encoding", "UTF-8")
 }
 
 sourceSets.main {
@@ -124,8 +137,18 @@ tasks.named<ShadowJar>("shadowJar") {
     archiveBaseName.set("NetworksExpansion")
     archiveVersion.set(project.version.toString())
     archiveClassifier.set("")
-    relocate("org.bstats", "io.github.sefiraat.networks.bstats")
-    relocate("io.papermc.lib", "dev.sefiraat.cultivation.paperlib")
+        minimize()
+
+        // Relocations
+        relocate("org.bstats", "io.github.sefiraat.networks.bstats")
+        relocate("io.papermc.lib", "dev.sefiraat.cultivation.paperlib")
+        relocate("net.byteflux.libby", "com.balugaq.netex.libraries.libby")
+
+        // Exclude META-INF
+        exclude("META-INF/*")
+
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        mergeServiceFiles()
 }
 
 tasks.build {
@@ -154,6 +177,34 @@ publishing {
     }
 }
 
+tasks.runServer {
+    dependsOn(tasks.named("shadowJar"))
+    val run = file(providers.gradleProperty("server.run.dir").orElse("run"))
+    runDirectory.set(run)
+
+    doFirst {
+        run.resolve("eula.txt").writeText("eula=true")
+
+        val pl = run.resolve("plugins")
+        pl.mkdirs()
+        copy {
+            from(projectDir.resolve("build/libs")) {
+                include("${name}-${version}.jar")
+            }
+            into(pl)
+        }
+    }
+
+    jvmArgs("-Dfile.encoding=UTF-8",
+        "-Dsun.jnu.encoding=UTF-8",
+        "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5001",
+        "-Dnet.kyori.adventure.text.warn_when_legacy_formatting_detected=false"
+    )
+    maxHeapSize = "4G"
+    minecraftVersion("1.21.11")
+}
+
+defaultTasks("clean", "build")
 
 fun Project.resolveVersion(): String {
     return "${findProperty("projectVersion")?.toString()?.takeIf { it.isNotBlank() } ?: "indev"}-$buildTimestamp"

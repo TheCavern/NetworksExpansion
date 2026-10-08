@@ -5,16 +5,17 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
 @ToString
 public class ItemStackCache {
 
-    private @Nullable ItemStack itemStack;
+    protected @UnknownNullability ItemStack itemStack;
 
     @Nullable
-    private ItemMeta itemMeta = null;
+    protected ItemMeta itemMeta = null;
 
-    private boolean metaCached = false;
+    protected boolean metaCached = false;
 
     public ItemStackCache(@Nullable ItemStack itemStack) {
         this.itemStack = itemStack;

@@ -71,7 +71,10 @@ public enum FeedbackType implements Keyed {
     SAME_NETWORK,
     NO_MENU,
     UNSUPPORTED_BLUEPRINT,
-    BROKEN_BLUEPRINT;
+    BROKEN_BLUEPRINT,
+    NO_LOCATION_FOUND,
+    NOT_ENOUGH_ITEMS,
+    CANNOT_ACCESS_CODE;
 
     private final @NotNull NamespacedKey key;
     private final @NotNull String message;

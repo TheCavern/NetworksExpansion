@@ -5,6 +5,7 @@ import com.balugaq.netex.api.enums.FeedbackType;
 import com.balugaq.netex.api.helpers.Icon;
 import com.balugaq.netex.utils.BlockMenuUtil;
 import com.balugaq.netex.utils.Lang;
+import com.balugaq.netex.utils.RootWriteLock;
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import com.ytdd9527.networksexpansion.core.items.SpecialSlimefunItem;
@@ -58,6 +59,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings({"deprecation", "DuplicatedCode"})
 public class NetworkQuantumStorage extends SpecialSlimefunItem implements DistinctiveItem {
@@ -97,7 +99,7 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
     private static final int[] OUTPUT_SLOTS = new int[]{6, 8};
     private static final int[] BACKGROUND_SLOTS = new int[]{9, 10, 11, 12, 14, 15, 16, 17};
 
-    private static final Map<Location, QuantumCache> CACHES = new HashMap<>();
+    private static final Map<Location, QuantumCache> CACHES = new ConcurrentHashMap<>();
 
     static {
         final ItemMeta itemMeta = Icon.QUANTUM_STORAGE_NO_ITEM.getItemMeta();
@@ -185,7 +187,7 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
 
     @ParametersAreNonnullByDefault
     @Nullable
-    public static ItemStack getItemStack(@NotNull QuantumCache cache, @NotNull BlockMenu blockMenu, int amount) {
+    public static synchronized ItemStack getItemStack(@NotNull QuantumCache cache, @NotNull BlockMenu blockMenu, int amount) {
         if (cache.getAmountLong() < amount) {
             // Storage has no content or not enough, mix and match!
             ItemStack output = blockMenu.getItemInSlot(OUTPUT_SLOT);
@@ -283,27 +285,30 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
     }
 
     public static void setItem(@NotNull BlockMenu blockMenu, @NotNull Player player) {
-        ItemStack itemStack = player.getItemOnCursor().clone();
+        synchronized (RootWriteLock.get()) {
+            ItemStack itemStack = player.getItemOnCursor().clone();
 
-        if (StackUtils.isBlacklisted(itemStack)) {
-            return;
-        }
+            if (StackUtils.isBlacklisted(itemStack)) {
+                return;
+            }
 
-        final QuantumCache cache = CACHES.get(blockMenu.getLocation());
-        if (cache == null || cache.getAmountLong() > 0) {
-            player.sendMessage(
-                Lang.getString("messages.unsupported-operation.quantum_storage.quantum_storage_not_empty"));
-            return;
+            final QuantumCache cache = CACHES.get(blockMenu.getLocation());
+            if (cache == null || cache.getAmountLong() > 0) {
+                player.sendMessage(
+                    Lang.getString("messages.unsupported-operation.quantum_storage.quantum_storage_not_empty"));
+                return;
+            }
+            itemStack.setAmount(1);
+            // EZ change 9/23/2026
+            final ItemStack skullRefreshed = ItemStackUtil.refreshOutdatedSkull(itemStack);
+            if (skullRefreshed != null) {
+                itemStack = skullRefreshed;
+            }
+            cache.setItemStack(itemStack);
+            updateDisplayItem(blockMenu, cache);
+            syncBlock(blockMenu.getLocation(), cache);
+            CACHES.put(blockMenu.getLocation(), cache);
         }
-        itemStack.setAmount(1);
-        final ItemStack skullRefreshed = ItemStackUtil.refreshOutdatedSkull(itemStack);
-        if (skullRefreshed != null) {
-            itemStack = skullRefreshed;
-        }
-        cache.setItemStack(itemStack);
-        updateDisplayItem(blockMenu, cache);
-        syncBlock(blockMenu.getLocation(), cache);
-        CACHES.put(blockMenu.getLocation(), cache);
     }
 
     @Override
@@ -520,7 +525,7 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
         };
     }
 
-    public void insertAll(@NotNull Player p, @NotNull BlockMenu menu, @NotNull Block b) {
+    public synchronized void insertAll(@NotNull Player p, @NotNull BlockMenu menu, @NotNull Block b) {
         PlayerInventory inv = p.getInventory();
         QuantumCache cache = CACHES.get(menu.getLocation());
         if (cache == null) return;
@@ -528,9 +533,9 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
         ItemStack storedItem = cache.getItemStack();
         if (storedItem == null) return;
 
-        if (dupeDetect(b, p)) {
-            return;
-        }
+//        if (dupeDetect(b, p)) {
+//            return;
+//        }
 
         long capacity = cache.getLimitLong();
 
@@ -560,7 +565,7 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
         updateDisplayItem(menu, cache);
     }
 
-    public void extract(@NotNull Player p, @NotNull BlockMenu menu, @NotNull Block b, @NotNull ClickAction action) {
+    public synchronized void extract(@NotNull Player p, @NotNull BlockMenu menu, @NotNull Block b, @NotNull ClickAction action) {
         QuantumCache cache = CACHES.get(menu.getLocation());
         if (cache == null) return;
 
@@ -569,9 +574,9 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
             return;
         }
 
-        if (dupeDetect(b, p)) {
-            return;
-        }
+//        if (dupeDetect(b, p)) {
+//            return;
+//        }
 
         long stored = cache.getAmountLong();
         if (action.isShiftClicked() && action.isRightClicked()) {
@@ -645,7 +650,10 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
         long maxAmount,
         boolean voidExcess,
         boolean supportsCustomMaxAmount) {
-        if (itemStack == null || itemStack.getType() == Material.AIR || isDisplayItem(itemStack)) {
+        if (itemStack == null
+            || itemStack.getType() == Material.AIR
+            || isDisplayItem(itemStack)
+            || StackUtils.isBlacklisted(itemStack)) {
             menu.addItem(ITEM_SLOT, ItemStackUtil.getCleanItem(Icon.QUANTUM_STORAGE_NO_ITEM));
             return new QuantumCache(null, 0, maxAmount, false, this.supportsCustomMaxAmount);
         } else {
@@ -723,6 +731,10 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
             return;
         }
 
+        if (cache.getItemStack() != null && StackUtils.isBlacklisted(cache.getItemStack())) {
+            return;
+        }
+
         syncBlock(event.getBlock().getLocation(), cache);
         CACHES.put(event.getBlock().getLocation(), cache);
     }
@@ -754,6 +766,7 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
                             player.getName(),
                             storage.getLocation()
                         ));
+                    player.sendMessage(Lang.getString("messages.unsupported-operation.quantum_storage.dangerous_operation"));
                     return true;
                 }
             }

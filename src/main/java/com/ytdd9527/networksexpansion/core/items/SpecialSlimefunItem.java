@@ -27,7 +27,7 @@ public abstract class SpecialSlimefunItem extends SlimefunItem implements Feedba
         @NotNull ItemGroup itemGroup,
         @NotNull SlimefunItemStack item,
         @NotNull RecipeType recipeType,
-        @NotNull ItemStack @NotNull [] recipe) {
+        @Nullable ItemStack @NotNull [] recipe) {
         super(itemGroup, item, recipeType, recipe);
     }
 
@@ -35,7 +35,7 @@ public abstract class SpecialSlimefunItem extends SlimefunItem implements Feedba
         @NotNull ItemGroup itemGroup,
         @NotNull SlimefunItemStack item,
         @NotNull RecipeType recipeType,
-        @NotNull ItemStack @NotNull [] recipe,
+        @Nullable ItemStack @NotNull [] recipe,
         @Nullable ItemStack recipeOutput) {
         super(itemGroup, item, recipeType, recipe, recipeOutput);
     }
@@ -45,7 +45,7 @@ public abstract class SpecialSlimefunItem extends SlimefunItem implements Feedba
         @NotNull ItemStack item,
         @NotNull String id,
         @NotNull RecipeType recipeType,
-        @NotNull ItemStack @NotNull [] recipe) {
+        @Nullable ItemStack @NotNull [] recipe) {
         super(itemGroup, item, id, recipeType, recipe);
     }
 
@@ -53,7 +53,7 @@ public abstract class SpecialSlimefunItem extends SlimefunItem implements Feedba
         @NotNull ItemGroup itemGroup,
         @NotNull SlimefunItemStack item,
         @NotNull RecipeType recipeType,
-        @NotNull ItemStack @NotNull [] recipe,
+        @Nullable ItemStack @NotNull [] recipe,
         @Range(from = 1, to = 64) int outputAmount
     ) {
         this(itemGroup, item, recipeType, recipe, StackUtils.getAsQuantity(item, outputAmount));

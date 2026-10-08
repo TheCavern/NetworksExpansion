@@ -1,5 +1,6 @@
 package io.github.sefiraat.networks;
 
+import com.balugaq.bim.BIMLoader;
 import com.balugaq.netex.api.algorithm.ID;
 import com.balugaq.netex.api.data.ItemFlowRecord;
 import com.balugaq.netex.api.enums.MinecraftVersion;
@@ -10,6 +11,8 @@ import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import com.ytdd9527.networksexpansion.core.managers.ConfigManager;
 import com.ytdd9527.networksexpansion.core.services.LocalizationService;
+import com.ytdd9527.networksexpansion.implementation.machines.cellnet.drive.CellDrive;
+import com.ytdd9527.networksexpansion.implementation.machines.cellnet.storage.CellStorageDatabase;
 import com.ytdd9527.networksexpansion.setup.SetupUtil;
 import com.ytdd9527.networksexpansion.utils.databases.DataSource;
 import com.ytdd9527.networksexpansion.utils.databases.DataStorage;
@@ -28,9 +31,9 @@ import io.github.thebusybiscuit.slimefun4.core.guide.options.SlimefunGuideSettin
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.paperlib.PaperLib;
 import lombok.Getter;
-//import net.guizhanss.guizhanlibplugin.updater.GuizhanUpdater;
-//import org.bstats.bukkit.Metrics;
-import org.bstats.charts.AdvancedPie;
+import net.byteflux.libby.BukkitLibraryManager;
+import net.byteflux.libby.Library;
+import net.byteflux.libby.LibraryManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.PluginCommand;
@@ -63,6 +66,12 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
     @Getter
     private static BukkitRunnable autoSaveThread;
 
+    @Getter
+    private static BukkitRunnable aeAutoSaveThread;
+
+    @Getter
+    private static CellStorageDatabase cellStorageDatabase;
+
     private static MinecraftVersion minecraftVersion = MinecraftVersion.UNKNOWN;
     private final @NotNull String username;
     private final @NotNull String repo;
@@ -71,6 +80,7 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
     private ListenerManager listenerManager;
     private SupportedPluginManager supportedPluginManager;
     private LocalizationService localizationService;
+    private BIMLoader bimLoader;
     private long slimefunTickCount;
 
     public Networks() {
@@ -89,19 +99,23 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
 
     @NotNull
     public static PluginManager getPluginManager() {
-        return Networks.getInstance().getServer().getPluginManager();
+        return getInstance().getServer().getPluginManager();
     }
 
     public static SupportedPluginManager getSupportedPluginManager() {
-        return Networks.getInstance().supportedPluginManager;
+        return getInstance().supportedPluginManager;
     }
 
     public static LocalizationService getLocalizationService() {
-        return Networks.getInstance().localizationService;
+        return getInstance().localizationService;
     }
 
     public static ListenerManager getListenerManager() {
-        return Networks.getInstance().listenerManager;
+        return getInstance().listenerManager;
+    }
+
+    public static BIMLoader getBIMLoader() {
+        return getInstance().bimLoader;
     }
 
     public static long getSlimefunTickCount() {
@@ -112,9 +126,11 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
     public void onEnable() {
         instance = this;
 
+        loadLibraries();
+
         getLogger().info("Loading language");
         this.configManager = new ConfigManager();
-        localizationService = new LocalizationService(this);
+        this.localizationService = new LocalizationService(this);
         String language = configManager.getLanguage();
         try {
             localizationService.addLanguage(language);
@@ -123,7 +139,7 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
             getLogger().log(Level.WARNING, "Failed to load language " + language, e);
         }
 
-        localizationService.addLanguage(DEFAULT_LANGUAGE);
+        localizationService.addDefaultLanguage(DEFAULT_LANGUAGE);
         getLogger().info("Default language " + DEFAULT_LANGUAGE + " loaded successfully.");
 
         superHead();
@@ -135,9 +151,11 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
 //        getLogger().info(getLocalizationService().getString("messages.startup.trying-auto-update"));
 //        tryUpdate();
 
+        this.bimLoader = new BIMLoader(this);
+
         this.supportedPluginManager = new SupportedPluginManager();
 
-        // Try connect database
+        // Try to connect database
         getLogger().info(getLocalizationService().getString("messages.startup.connecting-database"));
         try {
             dataSource = new DataSource();
@@ -163,6 +181,25 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
         long period = 20L * seconds;
         autoSaveThread.runTaskTimerAsynchronously(this, 2 * period, period);
 
+        // 元件驱动器元件数据自动保存
+        aeAutoSaveThread = new BukkitRunnable() {
+            @Override
+            public void run() {
+                CellDrive.saveAllDriveCells();
+            }
+        };
+        aeAutoSaveThread.runTaskTimerAsynchronously(this, 2 * period, period);
+
+        getLogger().info(getLocalizationService().getString("messages.startup.initializing-cell-database"));
+        try {
+            cellStorageDatabase = new CellStorageDatabase();
+            cellStorageDatabase.init();
+        } catch (Exception e) {
+            cellStorageDatabase = null;
+            getLogger().warning(getLocalizationService().getString("messages.startup.failed-to-init-cell-database"));
+            Debug.trace(e);
+        }
+
         getLogger().info(getLocalizationService().getString("messages.startup.registering-items"));
         SetupUtil.setupAll();
 
@@ -183,7 +220,7 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
                 1,
                 Slimefun.getTickerTask().getTickRate());
 
-        // Fix dupe bug which break the network controller data without player interaction
+        // Fix dupe bug where player breaks the network controller data without player interaction
         Bukkit.getScheduler()
             .runTaskTimer(
                 this,
@@ -237,7 +274,14 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
         if (autoSaveThread != null) {
             autoSaveThread.cancel();
         }
+        if (aeAutoSaveThread != null) {
+            aeAutoSaveThread.cancel();
+        }
         DataStorage.saveAmountChange();
+        CellDrive.saveAllDriveCells();
+        if (cellStorageDatabase != null) {
+            cellStorageDatabase.shutdown();
+        }
         if (queryQueue != null) {
             while (!queryQueue.isAllDone()) {
                 getLogger()
@@ -313,6 +357,43 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
                     .warning(getLocalizationService().getString("messages.integrations.not-found-netheopoiesis"));
             }
         }
+    }
+
+    private void loadLibraries() {
+        LibraryManager libraryManager = new BukkitLibraryManager(this);
+        libraryManager.addMavenCentral();
+
+        getLogger().info("正在加载 Pinyin");
+        Library pinyin = Library.builder()
+            .groupId("com{}github{}houbb")
+            .artifactId("pinyin")
+            .version("0.4.0")
+            .build();
+        libraryManager.loadLibrary(pinyin);
+
+        getLogger().info("正在加载 opencc4j");
+        Library opencc4j = Library.builder()
+            .groupId("com{}github{}houbb")
+            .artifactId("opencc4j")
+            .version("1.14.0")
+            .build();
+        libraryManager.loadLibrary(opencc4j);
+
+        getLogger().info("正在加载 heaven");
+        Library heaven = Library.builder()
+            .groupId("com{}github{}houbb")
+            .artifactId("heaven")
+            .version("0.13.0")
+            .build();
+        libraryManager.loadLibrary(heaven);
+
+        getLogger().info("正在加载 nlp-common");
+        Library nlp = Library.builder()
+            .groupId("com{}github{}houbb")
+            .artifactId("nlp-common")
+            .version("0.0.5")
+            .build();
+        libraryManager.loadLibrary(nlp);
     }
 
     public MinecraftVersion getMCVersion() {
