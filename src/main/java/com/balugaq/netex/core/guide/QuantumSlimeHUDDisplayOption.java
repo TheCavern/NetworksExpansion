@@ -1,6 +1,7 @@
 package com.balugaq.netex.core.guide;
 
 import com.balugaq.jeg.api.patches.JEGGuideSettings;
+import com.balugaq.netex.utils.Lang;
 import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.utils.Keys;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
@@ -37,10 +38,14 @@ public class QuantumSlimeHUDDisplayOption implements SlimefunGuideOption<Boolean
     public Optional<ItemStack> getDisplayItem(Player p, ItemStack guide) {
         boolean enabled = getSelectedOption(p, guide).orElse(false);
         ItemStack item = new CustomItemStack(
-                isEnabled(p) ? Material.KNOWLEDGE_BOOK : Material.BOOK,
-                "&bQuantum storage HUD display: &" + (enabled ? "a percentage display" : "4Numerical display"),
-                "",
-                "&7\u21E8 &eClick to use the quantum storage HUD display mode. " + (!enabled ? "Percentage display" : "Numerical display")
+            isEnabled(p) ? Material.KNOWLEDGE_BOOK : Material.BOOK,
+            Lang.getString(enabled
+                ? "messages.guide.quantum-hud-display-mode.display-name-percent"
+                : "messages.guide.quantum-hud-display-mode.display-name-value"),
+            "",
+            Lang.getString(!enabled
+                ? "messages.guide.quantum-hud-display-mode.click-tip-to-percent"
+                : "messages.guide.quantum-hud-display-mode.click-tip-to-value")
         );
         return Optional.of(item);
     }

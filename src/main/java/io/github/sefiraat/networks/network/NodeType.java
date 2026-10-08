@@ -46,6 +46,7 @@ public enum NodeType {
     ITEM_DIFFERENTER,
     STORAGE_CARD_CONVERTER,
     FACING_PRESETTER,
+    VISUAL_GRID,
 
     // Hanging blocks
     @Deprecated
@@ -54,8 +55,4 @@ public enum NodeType {
     SWITCHING_MONITOR,
     // will NOT count as a node
     HANGING_GRID,
-
-    // from other addons
-    // For SlimeAEPlugin
-    AE_SWITCHER
 }

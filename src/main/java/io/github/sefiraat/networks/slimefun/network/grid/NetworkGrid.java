@@ -1,9 +1,11 @@
 package io.github.sefiraat.networks.slimefun.network.grid;
 
+import com.balugaq.netex.api.visual.Screen;
 import io.github.sefiraat.networks.slimefun.NetworkSlimefunItems;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
+import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction;
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
@@ -13,10 +15,12 @@ import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("DuplicatedCode")
@@ -44,6 +48,12 @@ public class NetworkGrid extends AbstractGrid {
 
     public NetworkGrid(ItemGroup itemGroup, SlimefunItemStack item, RecipeType recipeType, ItemStack[] recipe) {
         super(itemGroup, item, recipeType, recipe);
+        addItemHandler(new BlockBreakHandler(false, false) {
+
+            @Override
+            public void onPlayerBreak(@NotNull BlockBreakEvent event, @NotNull ItemStack item, @NotNull List<ItemStack> drops) {
+            }
+        });
     }
 
     @Override
@@ -92,7 +102,7 @@ public class NetworkGrid extends AbstractGrid {
                             ? gridCache.getMaxPages()
                             : gridCache.getPage() + 1);
                     getCacheMap().put(menu.getLocation(), gridCache);
-                    updateDisplay(menu);
+                    updateDisplay(Screen.of(menu));
                     return false;
                 });
 
@@ -101,7 +111,7 @@ public class NetworkGrid extends AbstractGrid {
                     GridCache gridCache = getCacheMap().get(menu.getLocation());
                     AbstractGrid.updateSortOrder(gridCache, action, 2);
                     getCacheMap().put(menu.getLocation(), gridCache);
-                    updateDisplay(menu);
+                    updateDisplay(Screen.of(menu));
                     return false;
                 });
 
@@ -124,7 +134,7 @@ public class NetworkGrid extends AbstractGrid {
                     }
 
                     // Shift+Left-click
-                    receiveItem(p, i, a, menu);
+                    receiveItem(p, i, a, Screen.of(menu));
                     return false;
                 });
             }

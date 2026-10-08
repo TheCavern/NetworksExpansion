@@ -6,6 +6,7 @@ import com.balugaq.netex.api.keybind.ActionResult;
 import com.balugaq.netex.api.keybind.Keybind;
 import com.balugaq.netex.api.keybind.Keybinds;
 import com.balugaq.netex.api.keybind.MultiActionHandle;
+import com.balugaq.netex.api.visual.Screen;
 import io.github.sefiraat.networks.NetworkStorage;
 import io.github.sefiraat.networks.network.GridItemRequest;
 import io.github.sefiraat.networks.network.NodeDefinition;
@@ -50,7 +51,7 @@ public interface BaseGrid {
                     NodeDefinition definition = NetworkStorage.getNode(menu.getLocation());
                     if (definition == null || definition.getNode() == null)
                         return ActionResult.of(MultiActionHandle.CONTINUE, false);
-                    definition.getNode().getRoot().addItemStack(player.getItemOnCursor());
+                      definition.getNode().getRoot().addItemStack0(menu.getLocation(), player.getItemOnCursor());
                     return ActionResult.of(MultiActionHandle.BREAK, false);
                 });
 
@@ -103,7 +104,7 @@ public interface BaseGrid {
                 );
 
                 Action storeItem = Action.of(Keys.newKey("store-item"), (p, s, i, a, menu) -> {
-                    receiveItem(p, i, a, menu);
+                    receiveItem(p, i, a, Screen.of(menu));
                     return ActionResult.of(MultiActionHandle.BREAK, false);
                 });
 
@@ -134,7 +135,7 @@ public interface BaseGrid {
 
     Map<Location, GridCache> getCacheMap();
 
-    void updateDisplay(BlockMenu blockMenu);
+    void updateDisplay(Screen screen);
 
-    void receiveItem(Player player, ItemStack itemStack, ClickAction action, BlockMenu blockMenu);
+    void receiveItem(Player player, ItemStack itemStack, ClickAction action, Screen screen);
 }

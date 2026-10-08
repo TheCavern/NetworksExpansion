@@ -63,8 +63,9 @@ dependencies {
     // Tools etc.
     implementation("org.bstats:bstats-bukkit:3.2.1")
     implementation("com.jeff-media:MorePersistentDataTypes:2.4.0")
-    implementation("dev.sefiraat:SefiLib:0.2.6")
+    implementation("dev.sefiraat:SefiLib:0.3.0")
     implementation("net.byteflux:libby-bukkit:1.3.2")
+    implementation("com.github.balugaq:BigInteractionMenu:8991544824")
 
     compileOnly("com.google.code.findbugs:annotations:3.0.1u2") {
         exclude("net.jcip", "jcip-annotations")
@@ -90,7 +91,7 @@ dependencies {
     compileOnly("net.guizhanss:GuizhanLibPlugin:2.5.0-Cavern")
     compileOnly("io.ncbpfluffybear:FluffyMachines:indev-Jul.06.2026-1252")
     compileOnly("com.github.TimetownDev:GuguSlimefunLib:45627c6f8e")
-    compileOnly("com.github.balugaq:JustEnoughGuide:7f21e113a2")
+    compileOnly("com.github.balugaq:JustEnoughGuide:09e106914d")
     // System-scoped local JARs
     compileOnly(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))
 }
@@ -200,7 +201,7 @@ tasks.runServer {
         "-Dnet.kyori.adventure.text.warn_when_legacy_formatting_detected=false"
     )
     maxHeapSize = "4G"
-    minecraftVersion("1.20.1")
+    minecraftVersion("1.21.11")
 }
 
 defaultTasks("clean", "build")

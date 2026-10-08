@@ -139,3 +139,4 @@ gradle.properties
 .git-versioned-pom.xml
 
 ./bin
+.workbuddy/
