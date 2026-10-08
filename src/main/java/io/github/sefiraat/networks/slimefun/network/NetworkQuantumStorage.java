@@ -286,7 +286,7 @@ public class NetworkQuantumStorage extends SpecialSlimefunItem implements Distin
 
     public static void setItem(@NotNull BlockMenu blockMenu, @NotNull Player player) {
         synchronized (RootWriteLock.get()) {
-            final ItemStack itemStack = player.getItemOnCursor().clone();
+            ItemStack itemStack = player.getItemOnCursor().clone();
 
             if (StackUtils.isBlacklisted(itemStack)) {
                 return;
